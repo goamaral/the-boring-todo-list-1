@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+docker run -it --rm \
+  -w "/project" \
+  -e "air_wd=/project" \
+  -v $PWD:/project \
+  -p 3000:3000 \
+  cosmtrek/air \
+  -build.cmd "go build -o tmp/main ./cmd/app"
