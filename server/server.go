@@ -1,29 +1,38 @@
 package server
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"net/http"
+
+	"github.com/gofiber/fiber/v2"
+	m3o "go.m3o.com"
+)
 
 type server struct {
-	fiberApp *fiber.App
+	fiberApp       *fiber.App
+	taskController *taskController
 }
 
 type Server interface {
+	Run() error
+	Test(req *http.Request, msTimeout ...int) (resp *http.Response, err error)
 }
 
-func NewServer() *server {
-	s := &server{fiberApp: fiber.New()}
-	s.setupRoutes()
+func NewServer(m3oClient *m3o.Client) *server {
+	fiberApp := fiber.New()
+
+	s := &server{
+		fiberApp:       fiberApp,
+		taskController: newTaskController(fiberApp.Group("/tasks"), m3oClient.Db),
+	}
 
 	return s
 }
 
 /* PUBLIC */
 func (s server) Run() error {
-	return s.fiberApp.Listen(":3000")
+	return s.fiberApp.Listen("0.0.0.0:3000")
 }
 
-/* PRIVATE */
-func (s server) setupRoutes() {
-	s.fiberApp.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+func (s server) Test(req *http.Request, msTimeout ...int) (resp *http.Response, err error) {
+	return s.fiberApp.Test(req, msTimeout...)
 }

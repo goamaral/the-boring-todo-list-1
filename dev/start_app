@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-docker run -it --rm \
-  -w "/project" \
-  -e "air_wd=/project" \
-  -v $PWD:/project \
-  -p 3000:3000 \
-  cosmtrek/air \
-  -build.cmd "go build -o tmp/main ./cmd/app"
+set -eo pipefail
+
+go install github.com/joho/godotenv/cmd/godotenv@latest
+go install github.com/cosmtrek/air@latest
+
+godotenv air -build.cmd "go build -o tmp/main ./cmd/app"
