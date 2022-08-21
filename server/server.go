@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	m3o "go.m3o.com"
 )
 
@@ -19,6 +20,7 @@ type Server interface {
 
 func NewServer(m3oClient *m3o.Client) *server {
 	fiberApp := fiber.New()
+	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
 
 	s := &server{
 		fiberApp:       fiberApp,
