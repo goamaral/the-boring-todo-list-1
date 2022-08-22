@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	m3o "go.m3o.com"
 )
 
@@ -21,6 +22,7 @@ type Server interface {
 func NewServer(m3oClient *m3o.Client) *server {
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
+	fiberApp.Use(recover.New())
 	fiberApp.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
