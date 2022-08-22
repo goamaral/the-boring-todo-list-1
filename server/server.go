@@ -21,6 +21,9 @@ type Server interface {
 func NewServer(m3oClient *m3o.Client) *server {
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
+	fiberApp.Get("/health", func(c *fiber.Ctx) error {
+		return c.SendString("OK")
+	})
 
 	s := &server{
 		fiberApp:       fiberApp,
