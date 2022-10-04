@@ -3,8 +3,8 @@ This project is part of collection of projects where I implement a TODO list app
 With it I am able to try and implement new technologies in a simple format.
 
 ## Features
-- [ ] Healthcheck
-- [ ] Create task
+- [X] Healthcheck
+- [X] Create task
 - [ ] List tasks
 - [ ] Get task
 - [ ] Update task
