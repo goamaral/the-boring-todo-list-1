@@ -6,7 +6,6 @@ import (
 	"example.com/fiber-m3o-validator/internal/server"
 	"example.com/fiber-m3o-validator/internal/service"
 	"example.com/fiber-m3o-validator/pkg/env"
-	"example.com/fiber-m3o-validator/pkg/errors"
 )
 
 func main() {
@@ -16,6 +15,6 @@ func main() {
 	// Run http server
 	err := server.NewServer(taskService).Run()
 	if err != nil {
-		panic(errors.Wrap(err, "failed to run server"))
+		panic(err)
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"go.m3o.com/db"
 
 	"example.com/fiber-m3o-validator/internal/entity"
-	"example.com/fiber-m3o-validator/pkg/errors"
 	"example.com/fiber-m3o-validator/pkg/provider"
 )
 
@@ -18,7 +17,7 @@ type taskService struct {
 
 type TaskService interface {
 	CreateTask(task entity.Task) (entity.Task, error)
-	ListTasks(pageId string, pageSize uint) ([]entity.Task, error)
+	ListTasks(pageSize uint, opts *ListTasksOpts) ([]entity.Task, error)
 }
 
 func NewTaskService(m3oDbClient provider.M3ODb) *taskService {
@@ -45,23 +44,43 @@ func (ts taskService) CreateTask(task entity.Task) (entity.Task, error) {
 	return task, nil
 }
 
-func (ts taskService) ListTasks(pageId string, pageSize uint) ([]entity.Task, error) {
-	var tasks []entity.Task
+type ListTasksOpts struct {
+	PageId string
+}
 
-	rsp, err := ts.m3oDbClient.Read(&db.ReadRequest{
-		Limit:   int32(pageSize),
-		OrderBy: "id",
-		Query:   fmt.Sprintf("id > '%s'", pageId),
-		Table:   entity.TasksTableName,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get tasks from m3o db")
+func (opts *ListTasksOpts) Apply(req *db.ReadRequest) *db.ReadRequest {
+	if opts == nil {
+		return req
 	}
 
+	if opts.PageId != "" {
+		req.OrderBy = "id"
+		req.Query = fmt.Sprintf("id > '%s'", opts.PageId)
+	}
+
+	return req
+}
+
+func (ts taskService) ListTasks(pageSize uint, opts *ListTasksOpts) ([]entity.Task, error) {
+	var tasks []entity.Task
+
+	// Apply options
+	req := opts.Apply(&db.ReadRequest{
+		Table: entity.TasksTableName,
+		Limit: int32(pageSize),
+	})
+
+	// List
+	rsp, err := ts.m3oDbClient.Read(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to entities
 	for _, r := range rsp.Records {
 		task, err := entity.TaskFromMap(r)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to convert task (%+v) from map", r)
+			return nil, err
 		}
 
 		tasks = append(tasks, task)

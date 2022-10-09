@@ -30,7 +30,7 @@ func NewServer(taskService service.TaskService) *server {
 
 	s := &server{
 		fiberApp:       fiberApp,
-		taskController: newTaskController(fiberApp.Group("/tasks"), taskService),
+		taskController: newTaskController(fiberApp, taskService),
 	}
 
 	return s

@@ -11,6 +11,8 @@ With it I am able to try and implement new technologies in a simple format.
   - [X] Backend
   - [ ] Frontend
 - [ ] Get task
+  - [ ] Backend
+  - [ ] Frontend
 - [ ] Update task
 - [ ] Delete task
 - [ ] Toggle done state

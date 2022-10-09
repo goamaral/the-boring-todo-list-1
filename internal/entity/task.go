@@ -2,15 +2,13 @@ package entity
 
 import (
 	"time"
-
-	"example.com/fiber-m3o-validator/pkg/errors"
 )
 
 type Task struct {
 	AbstractEntity
 
-	Title      string
-	CompleteAt *time.Time
+	Title       string
+	CompletedAt *time.Time
 }
 
 /* PUBLIC */
@@ -18,25 +16,32 @@ const TasksTableName = "tasks"
 
 func TaskToMap(t Task) map[string]interface{} {
 	return map[string]interface{}{
-		"id":          t.Id,
-		"created_at":  t.CreatedAt,
-		"title":       t.Title,
-		"complete_at": t.CompleteAt,
+		"id":           t.Id,
+		"created_at":   t.CreatedAt.Format(time.RFC3339),
+		"title":        t.Title,
+		"completed_at": t.CompletedAt,
 	}
 }
 
 func TaskFromMap(taskMap map[string]interface{}) (Task, error) {
 	var task Task
-	var ok bool
+	var err error
 
-	task.Id, ok = taskMap["id"].(string)
-	if !ok {
-		return Task{}, errors.NewParseError("task id", taskMap["id"])
+	task.AbstractEntity, err = AbstractEntityFromMap(taskMap)
+	if err != nil {
+		return Task{}, err
 	}
 
-	// TODO: created_at
-	// TODO: title
-	// TODO: completed_at
+	task.Title = taskMap["title"].(string)
+
+	completedAtStr, notNil := taskMap["completed_at"].(string)
+	if notNil {
+		completedAt, err := time.Parse(time.RFC3339, completedAtStr)
+		if err != nil {
+			return Task{}, err
+		}
+		task.CompletedAt = &completedAt
+	}
 
 	return task, nil
 }

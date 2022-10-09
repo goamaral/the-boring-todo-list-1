@@ -32,26 +32,53 @@ func TestTaskService_CreateTask(t *testing.T) {
 }
 
 func TestTaskService_ListTasks(t *testing.T) {
-	pageId := ulid.Make().String()
-	expectedId := ulid.Make().String()
 	var pageSize uint = 10
 
-	mockM3ODbClient := mocks.NewM3ODb(t)
-	mockM3ODbClient.On("Read", mock.Anything).
-		Return(func(req *db.ReadRequest) *db.ReadResponse {
-			assert.Equal(t, int32(pageSize), req.Limit)
-			assert.Equal(t, "id", req.OrderBy)
-			assert.Contains(t, req.Query, fmt.Sprintf("'%s'", pageId))
-			assert.Equal(t, entity.TasksTableName, req.Table)
+	type Test struct {
+		TestName               string
+		Ops                    *service.ListTasksOpts
+		ValidateM3OReadRequest func(t *testing.T, test Test, req *db.ReadRequest)
+	}
 
-			return &db.ReadResponse{Records: []map[string]interface{}{
-				entity.TaskToMap(entity.Task{AbstractEntity: entity.AbstractEntity{Id: expectedId}}),
-			}}
-		}, nil)
+	tests := []Test{
+		{
+			TestName: "Without options",
+			ValidateM3OReadRequest: func(t *testing.T, test Test, req *db.ReadRequest) {
+				assert.Equal(t, entity.TasksTableName, req.Table, "Table")
+				assert.Equal(t, int32(pageSize), req.Limit, "Limit")
+				assert.Empty(t, req.OrderBy, "OrderBy")
+				assert.Empty(t, req.Query, "Query")
+			},
+		},
+		{
+			TestName: "With PageId option",
+			Ops:      &service.ListTasksOpts{PageId: ulid.Make().String()},
+			ValidateM3OReadRequest: func(t *testing.T, test Test, req *db.ReadRequest) {
+				assert.Equal(t, entity.TasksTableName, req.Table, "Table")
+				assert.Equal(t, int32(pageSize), req.Limit, "Limit")
+				assert.Equal(t, "id", req.OrderBy, "OrderBy")
+				assert.Contains(t, req.Query, fmt.Sprintf("'%s'", test.Ops.PageId), "Query")
+			},
+		},
+	}
 
-	s := service.NewTaskService(mockM3ODbClient)
-	tasks, err := s.ListTasks(pageId, pageSize)
-	if assert.NoError(t, err) && assert.Len(t, tasks, 1) {
-		assert.Equal(t, expectedId, tasks[0].Id)
+	for _, test := range tests {
+		expectedId := ulid.Make().String()
+
+		mockM3ODbClient := mocks.NewM3ODb(t)
+		mockM3ODbClient.On("Read", mock.Anything).
+			Return(func(req *db.ReadRequest) *db.ReadResponse {
+				test.ValidateM3OReadRequest(t, test, req)
+
+				return &db.ReadResponse{Records: []map[string]interface{}{
+					entity.TaskToMap(entity.Task{AbstractEntity: entity.AbstractEntity{Id: expectedId}}),
+				}}
+			}, nil)
+
+		s := service.NewTaskService(mockM3ODbClient)
+		tasks, err := s.ListTasks(pageSize, test.Ops)
+		if assert.NoError(t, err) && assert.Len(t, tasks, 1) {
+			assert.Equal(t, expectedId, tasks[0].Id)
+		}
 	}
 }

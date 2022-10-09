@@ -3,9 +3,11 @@ package server_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"example.com/fiber-m3o-validator/internal/server"
@@ -13,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func sendRequest(t *testing.T, s server.Server, method string, route string, reqBody any, resBody any) *http.Response {
+func sendRequest(t *testing.T, s server.Server, method string, route string, reqBody any, resBody any) (*http.Response, error) {
 	reqBodyBytes, err := json.Marshal(reqBody)
 	reqBodyBuf := bytes.NewReader(reqBodyBytes)
 	if err != nil {
@@ -27,20 +29,34 @@ func sendRequest(t *testing.T, s server.Server, method string, route string, req
 		t.Fatalf("failed to send request: %v", err)
 	}
 
-	if _, ok := resBody.(*string); ok {
-		buf, err := io.ReadAll(res.Body)
+	// Read response body
+	resBodyBuf, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatalf("failed to decode response body: %v", err)
+	}
+	resBodyStr := string(resBodyBuf)
+
+	// Check if error occured
+	if strings.Contains(resBodyStr, "\"error\":") {
+		fiberErr := map[string]string{}
+		err = json.Unmarshal(resBodyBuf, &fiberErr)
 		if err != nil {
-			t.Fatalf("failed to decode response body to string: %v", err)
+			t.Fatalf("failed to decode response body: %v", err)
 		}
-		*(resBody.(*string)) = string(buf)
+
+		return nil, errors.New(fiberErr["error"])
+	}
+
+	if _, ok := resBody.(*string); ok {
+		*(resBody.(*string)) = resBodyStr
 	} else {
-		err = json.NewDecoder(res.Body).Decode(resBody)
+		err := json.Unmarshal(resBodyBuf, resBody)
 		if err != nil {
 			t.Fatalf("failed to decode response body: %v", err)
 		}
 	}
 
-	return res
+	return res, nil
 }
 
 func TestServer_HealthCheck(t *testing.T) {
@@ -48,8 +64,8 @@ func TestServer_HealthCheck(t *testing.T) {
 		s := server.NewServer(nil)
 
 		resBody := ""
-		res := sendRequest(t, s, fiber.MethodGet, "/health", nil, &resBody)
-		if assert.Equal(t, fiber.StatusOK, res.StatusCode, resBody) {
+		res, err := sendRequest(t, s, fiber.MethodGet, "/health", nil, &resBody)
+		if assert.NoError(t, err, err) && assert.Equal(t, fiber.StatusOK, res.StatusCode, resBody) {
 			assert.Equal(t, "OK", string(resBody))
 		}
 	})
