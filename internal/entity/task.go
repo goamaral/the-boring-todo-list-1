@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"example.com/fiber-m3o-validator/errors"
+	"example.com/fiber-m3o-validator/pkg/errors"
 )
 
 type Task struct {

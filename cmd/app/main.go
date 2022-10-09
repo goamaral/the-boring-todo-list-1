@@ -3,10 +3,10 @@ package main
 import (
 	m3o "go.m3o.com"
 
-	"example.com/fiber-m3o-validator/errors"
+	"example.com/fiber-m3o-validator/internal/server"
+	"example.com/fiber-m3o-validator/internal/service"
 	"example.com/fiber-m3o-validator/pkg/env"
-	"example.com/fiber-m3o-validator/server"
-	"example.com/fiber-m3o-validator/service"
+	"example.com/fiber-m3o-validator/pkg/errors"
 )
 
 func main() {

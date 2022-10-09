@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	entity "example.com/fiber-m3o-validator/entity"
+	entity "example.com/fiber-m3o-validator/internal/entity"
 	mock "github.com/stretchr/testify/mock"
 )
 

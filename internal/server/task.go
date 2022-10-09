@@ -4,9 +4,9 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 
-	"example.com/fiber-m3o-validator/entity"
-	"example.com/fiber-m3o-validator/errors"
-	"example.com/fiber-m3o-validator/service"
+	"example.com/fiber-m3o-validator/internal/entity"
+	"example.com/fiber-m3o-validator/internal/service"
+	"example.com/fiber-m3o-validator/pkg/errors"
 )
 
 type taskController struct {

@@ -4,8 +4,12 @@ With it I am able to try and implement new technologies in a simple format.
 
 ## Features
 - [X] Healthcheck
-- [X] Create task
-- [X] List tasks
+- [ ] Create task
+  - [X] Backend
+  - [ ] Frontend
+- [ ] List tasks
+  - [X] Backend
+  - [ ] Frontend
 - [ ] Get task
 - [ ] Update task
 - [ ] Delete task

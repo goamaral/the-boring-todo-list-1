@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"example.com/fiber-m3o-validator/server"
+	"example.com/fiber-m3o-validator/internal/server"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )

@@ -7,13 +7,13 @@ import (
 	"github.com/oklog/ulid/v2"
 	"go.m3o.com/db"
 
-	"example.com/fiber-m3o-validator/entity"
-	"example.com/fiber-m3o-validator/errors"
-	"example.com/fiber-m3o-validator/provider/thirdparty"
+	"example.com/fiber-m3o-validator/internal/entity"
+	"example.com/fiber-m3o-validator/pkg/errors"
+	"example.com/fiber-m3o-validator/pkg/provider"
 )
 
 type taskService struct {
-	m3oDbClient thirdparty.M3ODb
+	m3oDbClient provider.M3ODb
 }
 
 type TaskService interface {
@@ -21,7 +21,7 @@ type TaskService interface {
 	ListTasks(pageId string, pageSize uint) ([]entity.Task, error)
 }
 
-func NewTaskService(m3oDbClient thirdparty.M3ODb) *taskService {
+func NewTaskService(m3oDbClient provider.M3ODb) *taskService {
 	return &taskService{
 		m3oDbClient: m3oDbClient,
 	}

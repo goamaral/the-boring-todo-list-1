@@ -1,4 +1,4 @@
-package thirdparty
+package provider
 
 import "go.m3o.com/db"
 

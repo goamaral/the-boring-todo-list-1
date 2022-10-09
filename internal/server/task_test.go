@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"example.com/fiber-m3o-validator/entity"
+	"example.com/fiber-m3o-validator/internal/entity"
+	"example.com/fiber-m3o-validator/internal/server"
 	"example.com/fiber-m3o-validator/mocks"
-	"example.com/fiber-m3o-validator/server"
 )
 
 func TestTask_CreateTask(t *testing.T) {

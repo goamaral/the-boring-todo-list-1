@@ -3,10 +3,11 @@ package server
 import (
 	"net/http"
 
-	"example.com/fiber-m3o-validator/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+
+	"example.com/fiber-m3o-validator/internal/service"
 )
 
 type server struct {

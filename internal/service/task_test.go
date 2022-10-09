@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.m3o.com/db"
 
-	"example.com/fiber-m3o-validator/entity"
+	"example.com/fiber-m3o-validator/internal/entity"
+	"example.com/fiber-m3o-validator/internal/service"
 	"example.com/fiber-m3o-validator/mocks"
-	"example.com/fiber-m3o-validator/service"
 )
 
 func TestTaskService_CreateTask(t *testing.T) {
