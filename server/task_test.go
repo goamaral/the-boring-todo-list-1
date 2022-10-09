@@ -4,25 +4,48 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.m3o.com/db"
 
+	"example.com/fiber-m3o-validator/entity"
 	"example.com/fiber-m3o-validator/mocks"
+	"example.com/fiber-m3o-validator/server"
 )
 
 func TestTask_CreateTask(t *testing.T) {
 	t.Run("Created", func(t *testing.T) {
-		server := newServer(t, func(mockM3ODbClient *mocks.M3ODb) error {
-			mockM3ODbClient.On("Create", mock.Anything).Return(&db.CreateResponse{Id: "task-id"}, nil)
-			return nil
-		})
+		expectedId := ulid.Make().String()
 
-		reqBody := fiber.Map{"task": fiber.Map{"title": "test title"}}
-		resBody := fiber.Map{}
-		res := sendRequest(t, server, fiber.MethodPost, "/tasks", reqBody, &resBody)
+		taskService := mocks.NewTaskService(t)
+		taskService.On("CreateTask", mock.Anything).
+			Return(entity.Task{AbstractEntity: entity.AbstractEntity{Id: expectedId}}, nil)
+
+		s := server.NewServer(taskService)
+		reqBody := server.CreateTaskRequest{Task: server.NewTask{Title: "test title"}}
+		resBody := server.CreateResponse{}
+		res := sendRequest(t, s, fiber.MethodPost, "/tasks", reqBody, &resBody)
 		if assert.Equal(t, fiber.StatusCreated, res.StatusCode, resBody) {
-			assert.NotZero(t, resBody["id"])
+			assert.NotZero(t, resBody.Id)
+		}
+	})
+}
+
+func TestTask_ListTasks(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
+		expectedTaskId := ulid.Make().String()
+		var pageSize uint = 10
+
+		taskService := mocks.NewTaskService(t)
+		taskService.On("ListTasks", "", pageSize).
+			Return([]entity.Task{{AbstractEntity: entity.AbstractEntity{Id: expectedTaskId}}}, nil)
+
+		s := server.NewServer(taskService)
+		reqBody := server.ListTasksRequest{PageSize: pageSize}
+		resBody := server.ListTasksResponse{}
+		res := sendRequest(t, s, fiber.MethodGet, "/tasks", reqBody, &resBody)
+		if assert.Equal(t, fiber.StatusOK, res.StatusCode, resBody) && assert.Len(t, resBody.Tasks, 1) {
+			assert.Equal(t, expectedTaskId, resBody.Tasks[0].Id)
 		}
 	})
 }

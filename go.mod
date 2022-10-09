@@ -6,7 +6,6 @@ require (
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/gofiber/fiber/v2 v2.36.0
 	github.com/oklog/ulid/v2 v2.1.0
-	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.0
 	go.m3o.com v0.12.0
 )

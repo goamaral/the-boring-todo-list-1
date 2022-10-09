@@ -5,7 +5,7 @@ With it I am able to try and implement new technologies in a simple format.
 ## Features
 - [X] Healthcheck
 - [X] Create task
-- [ ] List tasks
+- [X] List tasks
 - [ ] Get task
 - [ ] Update task
 - [ ] Delete task

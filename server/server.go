@@ -3,10 +3,10 @@ package server
 import (
 	"net/http"
 
+	"example.com/fiber-m3o-validator/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	m3o "go.m3o.com"
 )
 
 type server struct {
@@ -19,7 +19,7 @@ type Server interface {
 	Test(req *http.Request, msTimeout ...int) (resp *http.Response, err error)
 }
 
-func NewServer(m3oClient *m3o.Client) *server {
+func NewServer(taskService service.TaskService) *server {
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
 	fiberApp.Use(recover.New())
@@ -29,7 +29,7 @@ func NewServer(m3oClient *m3o.Client) *server {
 
 	s := &server{
 		fiberApp:       fiberApp,
-		taskController: newTaskController(fiberApp.Group("/tasks"), m3oClient.Db),
+		taskController: newTaskController(fiberApp.Group("/tasks"), taskService),
 	}
 
 	return s

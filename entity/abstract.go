@@ -4,14 +4,7 @@ import (
 	"time"
 )
 
-type abstractEntity struct {
-	AbstractEntity
-
+type AbstractEntity struct {
 	Id        string
 	CreatedAt time.Time
-}
-
-type AbstractEntity interface {
-	GetTableName() string
-	ToMap() map[string]interface{}
 }

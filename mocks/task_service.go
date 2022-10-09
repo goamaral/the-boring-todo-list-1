@@ -13,17 +13,47 @@ type TaskService struct {
 }
 
 // CreateTask provides a mock function with given fields: task
-func (_m *TaskService) CreateTask(task *entity.Task) error {
+func (_m *TaskService) CreateTask(task entity.Task) (entity.Task, error) {
 	ret := _m.Called(task)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*entity.Task) error); ok {
+	var r0 entity.Task
+	if rf, ok := ret.Get(0).(func(entity.Task) entity.Task); ok {
 		r0 = rf(task)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(entity.Task)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(entity.Task) error); ok {
+		r1 = rf(task)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTasks provides a mock function with given fields: pageId, pageSize
+func (_m *TaskService) ListTasks(pageId string, pageSize uint) ([]entity.Task, error) {
+	ret := _m.Called(pageId, pageSize)
+
+	var r0 []entity.Task
+	if rf, ok := ret.Get(0).(func(string, uint) []entity.Task); ok {
+		r0 = rf(pageId, pageSize)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.Task)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, uint) error); ok {
+		r1 = rf(pageId, pageSize)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 type mockConstructorTestingTNewTaskService interface {
