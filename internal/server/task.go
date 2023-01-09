@@ -4,19 +4,19 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 
-	"example.com/fiber-m3o-validator/internal/entity"
-	"example.com/fiber-m3o-validator/internal/service"
+	"example.com/the-boring-to-do-list-1/internal/entity"
+	"example.com/the-boring-to-do-list-1/internal/repository"
 )
 
 type taskController struct {
-	taskService service.TaskService
-	validate    *validator.Validate
+	taskRepo repository.TaskRepository
+	validate *validator.Validate
 }
 
-func newTaskController(baseRouter fiber.Router, taskService service.TaskService) *taskController {
+func newTaskController(baseRouter fiber.Router, taskRepo repository.TaskRepository) *taskController {
 	ctrl := &taskController{
-		taskService: taskService,
-		validate:    validator.New(),
+		taskRepo: taskRepo,
+		validate: validator.New(),
 	}
 
 	tasksRouter := baseRouter.Group("/tasks")
@@ -49,7 +49,8 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 	}
 
 	// Create task
-	task, err := tc.taskService.CreateTask(entity.Task{Title: req.Task.Title})
+	task := entity.Task{Title: req.Task.Title}
+	err = tc.taskRepo.CreateTask(c.Context(), &task)
 	if err != nil {
 		return err
 	}
@@ -59,7 +60,7 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 
 type ListTasksRequest struct {
 	PageId   string `json:"page_id"`
-	PageSize uint   `json:"page_size" validate:"gt=0,lte=10"`
+	PageSize int    `json:"page_size" validate:"gte=0,lte=10"`
 }
 type ListTasksResponse struct {
 	Tasks []entity.Task `json:"tasks"`
@@ -80,10 +81,10 @@ func (tc taskController) ListTasks(c *fiber.Ctx) error {
 	}
 
 	// Build options
-	opts := service.ListTasksOpts{PageId: req.PageId}
+	opts := repository.ListTasksOpts{PageId: req.PageId, PageSize: req.PageSize}
 
 	// List tasks
-	tasks, err := tc.taskService.ListTasks(req.PageSize, &opts)
+	tasks, err := tc.taskRepo.ListTasks(c.Context(), &opts)
 	if err != nil {
 		return err
 	}

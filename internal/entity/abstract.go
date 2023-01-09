@@ -5,7 +5,7 @@ import (
 )
 
 type AbstractEntity struct {
-	Id        string
+	Id        string `gorm:"primarykey"`
 	CreatedAt time.Time
 }
 

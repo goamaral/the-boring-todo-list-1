@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
-	"example.com/fiber-m3o-validator/internal/service"
+	"example.com/the-boring-to-do-list-1/internal/repository"
 )
 
 type server struct {
@@ -20,7 +20,7 @@ type Server interface {
 	Test(req *http.Request, msTimeout ...int) (resp *http.Response, err error)
 }
 
-func NewServer(taskService service.TaskService) *server {
+func NewServer(taskRepo repository.TaskRepository) *server {
 	fiberApp := fiber.New()
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
 	fiberApp.Use(recover.New())
@@ -30,7 +30,7 @@ func NewServer(taskService service.TaskService) *server {
 
 	s := &server{
 		fiberApp:       fiberApp,
-		taskController: newTaskController(fiberApp, taskService),
+		taskController: newTaskController(fiberApp, taskRepo),
 	}
 
 	return s

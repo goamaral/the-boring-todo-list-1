@@ -7,10 +7,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
-	"example.com/fiber-m3o-validator/internal/server"
+	"example.com/the-boring-to-do-list-1/internal/server"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,14 +36,8 @@ func sendRequest(t *testing.T, s server.Server, method string, route string, req
 	resBodyStr := string(resBodyBuf)
 
 	// Check if error occured
-	if strings.Contains(resBodyStr, "\"error\":") {
-		fiberErr := map[string]string{}
-		err = json.Unmarshal(resBodyBuf, &fiberErr)
-		if err != nil {
-			t.Fatalf("failed to decode response body: %v", err)
-		}
-
-		return nil, errors.New(fiberErr["error"])
+	if res.StatusCode == fiber.StatusInternalServerError {
+		return res, errors.New(string(resBodyBuf))
 	}
 
 	if _, ok := resBody.(*string); ok {

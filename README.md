@@ -20,6 +20,7 @@ With it I am able to try and implement new technologies in a simple format.
 - [ ] Add authentication
 - [ ] Add author to task
 - [ ] Add search author filter
+- [ ] Implement end to end tests
 
 ## Technologies
 ### Development tools
@@ -29,9 +30,10 @@ With it I am able to try and implement new technologies in a simple format.
 
 ### Backend
 - [Fiber - Http server](https://github.com/gofiber/fiber)
-- [M3O - Service provider](https://github.com/m3o/m3o-go)
 - [ULID - Unique identifiers](https://github.com/oklog/ulid)
 - [Validator - Struct validation](https://github.com/go-playground/validator)
+- [GORM - ORM](https://github.com/go-gorm/gorm)
+- [Goose - Migrations](https://github.com/pressly/goose)
 
 ### Frontend
 Not choosen yet

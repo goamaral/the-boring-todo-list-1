@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -eo pipefail
+DIR=${0%/*}
+
+# Set default ENV_PATH
+if [[ -z $ENV_PATH ]]; then
+  ENV_PATH="${DIR}/../.env"
+fi
+
+# Load .env
+if [[ -e $ENV_PATH ]]; then
+  export $(cat $ENV_PATH | xargs)
+else
+  echo "Missing .env file"
+  exit 1
+fi
+
+go install github.com/pressly/goose/v3/cmd/goose@latest
+
+# Run goose
+export GOOSE_DRIVER=postgres
+export GOOSE_DBSTRING="postgresql://${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}?password=${DB_PASSWORD}"
+goose -dir $DIR/../db/migrations -s $@

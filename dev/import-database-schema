@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Set default ENV_PATH
+if [[ -z $ENV_PATH ]]; then
+  ENV_PATH="${DIR}/../.env"
+fi
+
+# Load .env
+if [[ -e .env ]]; then
+  export $(cat .env | xargs)
+else
+  echo "Missing .env file"
+  exit 1
+fi
+
+PGPASSWORD=$DB_PASSWORD pg_dump --schema-only -d $DB_NAME -h $DB_HOST -p $DB_PORT -U $DB_USER > db/1_schema.sql

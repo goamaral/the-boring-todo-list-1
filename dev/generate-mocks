@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -eo pipefail
+
 go install github.com/vektra/mockery/v2@latest
 rm -R mocks
 mockery --all --case underscore

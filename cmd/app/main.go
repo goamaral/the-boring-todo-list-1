@@ -1,19 +1,23 @@
 package main
 
 import (
-	m3o "go.m3o.com"
-
-	"example.com/fiber-m3o-validator/internal/server"
-	"example.com/fiber-m3o-validator/internal/service"
-	"example.com/fiber-m3o-validator/pkg/env"
+	"example.com/the-boring-to-do-list-1/internal/repository"
+	"example.com/the-boring-to-do-list-1/internal/server"
+	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
 )
 
 func main() {
-	m3oClient := m3o.New(env.GetOrPanic("M3O_API_TOKEN"))
-	taskService := service.NewTaskService(m3oClient.Db)
+	// Init gorm provider
+	gormProvider, err := gormprovider.NewProvider()
+	if err != nil {
+		panic(err)
+	}
+
+	// Initialize repositories
+	taskRepo := repository.NewTaskRepository(gormProvider)
 
 	// Run http server
-	err := server.NewServer(taskService).Run()
+	err = server.NewServer(taskRepo).Run()
 	if err != nil {
 		panic(err)
 	}
