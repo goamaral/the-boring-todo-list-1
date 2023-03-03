@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	ulid "github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -17,13 +19,19 @@ import (
 func NewTaskRepository(t *testing.T) repository.TaskRepository {
 	_, b, _, _ := runtime.Caller(0)
 	folderPath := filepath.Dir(b)
-	err := godotenv.Load(folderPath + "/../../.env")
-	if err != nil {
+	if err := godotenv.Load(folderPath + "/../../.env"); err != nil {
 		t.Error(err)
 	}
 
 	gormProvider := gormprovider.NewTestProvider(t, folderPath+"/../../db/1_schema.sql")
 	return repository.NewTaskRepository(gormProvider)
+}
+
+func AddTask(t *testing.T, repo gormprovider.Repository, task *entity.Task) *entity.Task {
+	if err := repo.NewQuery(context.Background()).Create(task).Error; err != nil {
+		t.Error(err)
+	}
+	return task
 }
 
 func TestTaskRepository_CreateTask(t *testing.T) {
@@ -32,60 +40,42 @@ func TestTaskRepository_CreateTask(t *testing.T) {
 
 	task := entity.Task{Title: title}
 	err := repo.CreateTask(context.Background(), &task)
-	if assert.NoError(t, err) {
-		assert.NotZero(t, task.Id)
-		assert.NotZero(t, task.CreatedAt)
-	}
+	require.NoError(t, err)
+	assert.NotZero(t, task.Id)
+	assert.NotZero(t, task.CreatedAt)
 }
 
 func TestTaskRepository_ListTasks(t *testing.T) {
-	// var pageSize uint = 10
+	taskIds := []string{ulid.Make().String(), ulid.Make().String()}
 
-	// type Test struct {
-	// 	TestName               string
-	// 	Ops                    *service.ListTasksOpts
-	// 	ValidateM3OReadRequest func(t *testing.T, test Test, req *db.ReadRequest)
-	// }
+	type Test struct {
+		TestName string
+		Opts     []gormprovider.QueryOption
+	}
+	runTest := func(t *testing.T, test Test) []entity.Task {
+		repo := NewTaskRepository(t)
 
-	// tests := []Test{
-	// 	{
-	// 		TestName: "Without options",
-	// 		ValidateM3OReadRequest: func(t *testing.T, test Test, req *db.ReadRequest) {
-	// 			assert.Equal(t, entity.TasksTableName, req.Table, "Table")
-	// 			assert.Equal(t, int32(pageSize), req.Limit, "Limit")
-	// 			assert.Empty(t, req.OrderBy, "OrderBy")
-	// 			assert.Empty(t, req.Query, "Query")
-	// 		},
-	// 	},
-	// 	{
-	// 		TestName: "With PageId option",
-	// 		Ops:      &service.ListTasksOpts{PageId: ulid.Make().String()},
-	// 		ValidateM3OReadRequest: func(t *testing.T, test Test, req *db.ReadRequest) {
-	// 			assert.Equal(t, entity.TasksTableName, req.Table, "Table")
-	// 			assert.Equal(t, int32(pageSize), req.Limit, "Limit")
-	// 			assert.Equal(t, "id", req.OrderBy, "OrderBy")
-	// 			assert.Contains(t, req.Query, fmt.Sprintf("'%s'", test.Ops.PageId), "Query")
-	// 		},
-	// 	},
-	// }
+		for _, taskId := range taskIds {
+			AddTask(t, repo.GetGormRepository(), &entity.Task{AbstractEntity: entity.AbstractEntity{Id: taskId}})
+		}
 
-	// for _, test := range tests {
-	// 	expectedId := ulid.Make().String()
+		tasks, err := repo.ListTasks(context.Background(), test.Opts...)
+		require.NoError(t, err)
+		return tasks
+	}
 
-	// 	mockM3ODbClient := mocks.NewM3ODb(t)
-	// 	mockM3ODbClient.On("Read", mock.Anything).
-	// 		Return(func(req *db.ReadRequest) *db.ReadResponse {
-	// 			test.ValidateM3OReadRequest(t, test, req)
+	t.Run("WithoutOptions", func(t *testing.T) {
+		tasks := runTest(t, Test{})
+		assert.Len(t, tasks, 2)
+	})
 
-	// 			return &db.ReadResponse{Records: []map[string]interface{}{
-	// 				entity.TaskToMap(entity.Task{AbstractEntity: entity.AbstractEntity{Id: expectedId}}),
-	// 			}}
-	// 		}, nil)
-
-	// 	s := service.NewTaskRepository(mockM3ODbClient)
-	// 	tasks, err := s.ListTasks(pageSize, test.Ops)
-	// 	if assert.NoError(t, err) && assert.Len(t, tasks, 1) {
-	// 		assert.Equal(t, expectedId, tasks[0].Id)
-	// 	}
-	// }
+	t.Run("WithPageId", func(t *testing.T) {
+		tasks := runTest(t, Test{
+			Opts: []gormprovider.QueryOption{
+				gormprovider.PaginationOption{PageId: taskIds[0]},
+			},
+		})
+		require.Len(t, tasks, 1)
+		assert.Equal(t, tasks[0].Id, taskIds[1])
+	})
 }
