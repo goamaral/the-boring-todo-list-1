@@ -18,15 +18,20 @@ type taskRepository struct {
 }
 
 type TaskRepository interface {
+	GetGormRepository() gormprovider.Repository
 	CreateTask(ctx context.Context, task *entity.Task) error
 	ListTasks(ctx context.Context, opts ...gormprovider.QueryOption) ([]entity.Task, error)
 }
 
 func NewTaskRepository(gormProvider gormprovider.Provider) *taskRepository {
-	return &taskRepository{Repository: gormProvider.NewRepository("tasks")}
+	return &taskRepository{Repository: gormProvider.NewRepository(tasksTableName)}
 }
 
 /* PUBLIC */
+func (repo *taskRepository) GetGormRepository() gormprovider.Repository {
+	return repo.Repository
+}
+
 func (repo *taskRepository) CreateTask(ctx context.Context, task *entity.Task) error {
 	task.Id = ulid.Make().String()
 	return repo.Repository.NewQuery(ctx).Create(&task).Error
