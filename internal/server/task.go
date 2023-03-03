@@ -6,6 +6,7 @@ import (
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
+	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
 )
 
 type taskController struct {
@@ -80,11 +81,8 @@ func (tc taskController) ListTasks(c *fiber.Ctx) error {
 		return sendErrorResponse(c, fiber.StatusBadRequest, err)
 	}
 
-	// Build options
-	opts := repository.ListTasksOpts{PageId: req.PageId, PageSize: req.PageSize}
-
 	// List tasks
-	tasks, err := tc.taskRepo.ListTasks(c.Context(), &opts)
+	tasks, err := tc.taskRepo.ListTasks(c.Context(), gormprovider.PaginationOption{PageId: req.PageId, PageSize: req.PageSize})
 	if err != nil {
 		return err
 	}

@@ -17,7 +17,7 @@ type server struct {
 
 type Server interface {
 	Run() error
-	Test(req *http.Request, msTimeout ...int) (resp *http.Response, err error)
+	Test(req *http.Request) (resp *http.Response, err error)
 }
 
 func NewServer(taskRepo repository.TaskRepository) *server {
@@ -41,6 +41,6 @@ func (s server) Run() error {
 	return s.fiberApp.Listen("0.0.0.0:3000")
 }
 
-func (s server) Test(req *http.Request, msTimeout ...int) (resp *http.Response, err error) {
-	return s.fiberApp.Test(req, msTimeout...)
+func (s server) Test(req *http.Request) (resp *http.Response, err error) {
+	return s.fiberApp.Test(req, -1)
 }

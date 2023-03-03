@@ -12,3 +12,22 @@ func ApplyQueryOpts(qry *gorm.DB, opts ...QueryOption) *gorm.DB {
 	}
 	return qry
 }
+
+type PaginationOption struct {
+	PageId   string
+	PageSize int
+}
+
+func (opt PaginationOption) Apply(db *gorm.DB) *gorm.DB {
+	if opt.PageId != "" {
+		db = db.Where("id > ?", opt.PageId)
+	}
+
+	if opt.PageSize != 0 {
+		db = db.Limit(opt.PageSize)
+	} else {
+		db = db.Limit(DefaultPageSize)
+	}
+
+	return db
+}
