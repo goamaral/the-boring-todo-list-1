@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const DefaultPageSize = 10
+var DefaultPageSize = 10
 
 type provider struct {
 	*gorm.DB
