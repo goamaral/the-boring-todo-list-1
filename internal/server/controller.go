@@ -12,6 +12,6 @@ type CreateResponse struct {
 	Id string `json:"id"`
 }
 
-func sendCreateResponse(c *fiber.Ctx, id string) error {
+func sendCreatedResponse(c *fiber.Ctx, id string) error {
 	return c.Status(fiber.StatusCreated).JSON(CreateResponse{Id: id})
 }

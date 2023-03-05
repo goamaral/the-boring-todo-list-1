@@ -1,7 +1,9 @@
 package repository_test
 
 import (
+	"bytes"
 	"context"
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -23,7 +25,15 @@ func NewTaskRepository(t *testing.T) repository.TaskRepository {
 		t.Error(err)
 	}
 
-	gormProvider := gormprovider.NewTestProvider(t, folderPath+"/../../db/1_schema.sql")
+	schema, err := os.Open(folderPath + "/../../db/1_schema.sql")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// seed, err := os.Open(folderPath + "/../../db/2_seed.sql")
+	seed := bytes.NewReader(nil)
+
+	gormProvider := gormprovider.NewTestProvider(t, schema, seed)
 	return repository.NewTaskRepository(gormProvider)
 }
 

@@ -56,7 +56,7 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 		return err
 	}
 
-	return sendCreateResponse(c, task.Id)
+	return sendCreatedResponse(c, task.Id)
 }
 
 type ListTasksRequest struct {
