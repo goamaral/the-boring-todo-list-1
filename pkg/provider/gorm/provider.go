@@ -2,7 +2,7 @@ package gormprovider
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"strings"
 	"testing"
 
@@ -40,7 +40,7 @@ func NewProvider(args ...any) (Provider, error) {
 	return &provider{DB: db}, nil
 }
 
-func NewTestProvider(t *testing.T, schemaFilePath string) Provider {
+func NewTestProvider(t *testing.T, schema io.Reader, seed io.Reader) Provider {
 	dsn := NewDSN()
 	testDsn := NewDSN()
 	testDsn.DbName = fmt.Sprintf("%s_test_%s", dsn.DbName, strings.ToLower(ulid.Make().String()))
@@ -75,7 +75,7 @@ func NewTestProvider(t *testing.T, schemaFilePath string) Provider {
 	})
 
 	// Load schema
-	schemaSql, err := os.ReadFile(schemaFilePath)
+	schemaSql, err := io.ReadAll(schema)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,14 +85,14 @@ func NewTestProvider(t *testing.T, schemaFilePath string) Provider {
 	}
 
 	// Load seeds
-	// seedSql, err := os.ReadFile(folderPath + "/2_seeds.sql")
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// err = testDb.Exec(string(seedSql)).Fatal
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
+	seedSql, err := io.ReadAll(seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = testDb.Exec(string(seedSql)).Error
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Reconnect so loaded schema is visible
 	testDb, err = reconnect(testDb, testDsn)
