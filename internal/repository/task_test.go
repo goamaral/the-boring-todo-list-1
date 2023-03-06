@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -9,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	ulid "github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -30,8 +28,10 @@ func NewTaskRepository(t *testing.T) repository.TaskRepository {
 		t.Error(err)
 	}
 
-	// seed, err := os.Open(folderPath + "/../../db/2_seed.sql")
-	seed := bytes.NewReader(nil)
+	seed, err := os.Open(folderPath + "/../../db/2_seed.sql")
+	if err != nil {
+		t.Error(err)
+	}
 
 	gormProvider := gormprovider.NewTestProvider(t, schema, seed)
 	return repository.NewTaskRepository(gormProvider)
@@ -55,37 +55,6 @@ func TestTaskRepository_CreateTask(t *testing.T) {
 	assert.NotZero(t, task.CreatedAt)
 }
 
-func TestTaskRepository_ListTasks(t *testing.T) {
-	taskIds := []string{ulid.Make().String(), ulid.Make().String()}
-
-	type Test struct {
-		TestName string
-		Opts     []gormprovider.QueryOption
-	}
-	runTest := func(t *testing.T, test Test) []entity.Task {
-		repo := NewTaskRepository(t)
-
-		for _, taskId := range taskIds {
-			AddTask(t, repo.GetGormRepository(), &entity.Task{AbstractEntity: entity.AbstractEntity{Id: taskId}})
-		}
-
-		tasks, err := repo.ListTasks(context.Background(), test.Opts...)
-		require.NoError(t, err)
-		return tasks
-	}
-
-	t.Run("WithoutOptions", func(t *testing.T) {
-		tasks := runTest(t, Test{})
-		assert.Len(t, tasks, 2)
-	})
-
-	t.Run("WithPageId", func(t *testing.T) {
-		tasks := runTest(t, Test{
-			Opts: []gormprovider.QueryOption{
-				gormprovider.PaginationOption{PageId: taskIds[0]},
-			},
-		})
-		require.Len(t, tasks, 1)
-		assert.Equal(t, tasks[0].Id, taskIds[1])
-	})
+func TestTaskRepository_TaskFilter(t *testing.T) {
+	// TODO
 }

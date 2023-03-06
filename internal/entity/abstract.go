@@ -5,8 +5,8 @@ import (
 )
 
 type AbstractEntity struct {
-	Id        string `gorm:"primarykey"`
-	CreatedAt time.Time
+	Id        string    `json:"id" gorm:"primarykey"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 func AbstractEntityFromMap(entityMap map[string]interface{}) (AbstractEntity, error) {
