@@ -18,9 +18,9 @@ type taskRepository struct {
 }
 
 type TaskRepository interface {
-	GetGormRepository() gormprovider.Repository
 	CreateTask(ctx context.Context, task *entity.Task) error
 	ListTasks(ctx context.Context, opts ...gormprovider.QueryOption) ([]entity.Task, error)
+	GetTask(ctx context.Context, opts ...gormprovider.QueryOption) (entity.Task, error)
 }
 
 func NewTaskRepository(gormProvider gormprovider.Provider) *taskRepository {
@@ -28,10 +28,6 @@ func NewTaskRepository(gormProvider gormprovider.Provider) *taskRepository {
 }
 
 /* PUBLIC */
-func (repo *taskRepository) GetGormRepository() gormprovider.Repository {
-	return repo.Repository
-}
-
 func (repo *taskRepository) CreateTask(ctx context.Context, task *entity.Task) error {
 	task.Id = ulid.Make().String()
 	return repo.Repository.NewQuery(ctx).Create(&task).Error
@@ -46,4 +42,14 @@ func (repo *taskRepository) ListTasks(ctx context.Context, opts ...gormprovider.
 	}
 
 	return tasks, nil
+}
+
+func (repo *taskRepository) GetTask(ctx context.Context, opts ...gormprovider.QueryOption) (entity.Task, error) {
+	var task entity.Task
+	err := repo.NewQueryWithOpts(ctx, opts...).First(&task).Error
+	if err != nil {
+		return entity.Task{}, err
+	}
+
+	return task, nil
 }

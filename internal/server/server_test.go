@@ -14,14 +14,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func sendRequest(t *testing.T, s server.Server, method string, route string, reqBody any, resBody any) (*http.Response, error) {
+func buildReqBodyReader(t *testing.T, reqBody any) io.Reader {
 	reqBodyBytes, err := json.Marshal(reqBody)
-	reqBodyBuf := bytes.NewReader(reqBodyBytes)
 	if err != nil {
 		t.Fatalf("failed to encode request: %v", err)
 	}
+	return bytes.NewReader(reqBodyBytes)
+}
 
-	req := httptest.NewRequest(method, route, reqBodyBuf)
+func sendRequest(t *testing.T, s server.Server, method string, route string, reqBody io.Reader, resBody any) (*http.Response, error) {
+	req := httptest.NewRequest(method, route, reqBody)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := s.Test(req)
 	if err != nil {

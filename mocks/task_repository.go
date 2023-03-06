@@ -30,20 +30,35 @@ func (_m *TaskRepository) CreateTask(ctx context.Context, task *entity.Task) err
 	return r0
 }
 
-// GetGormRepository provides a mock function with given fields:
-func (_m *TaskRepository) GetGormRepository() gormprovider.Repository {
-	ret := _m.Called()
+// GetTask provides a mock function with given fields: ctx, opts
+func (_m *TaskRepository) GetTask(ctx context.Context, opts ...gormprovider.QueryOption) (entity.Task, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
-	var r0 gormprovider.Repository
-	if rf, ok := ret.Get(0).(func() gormprovider.Repository); ok {
-		r0 = rf()
+	var r0 entity.Task
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, ...gormprovider.QueryOption) (entity.Task, error)); ok {
+		return rf(ctx, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, ...gormprovider.QueryOption) entity.Task); ok {
+		r0 = rf(ctx, opts...)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(gormprovider.Repository)
-		}
+		r0 = ret.Get(0).(entity.Task)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, ...gormprovider.QueryOption) error); ok {
+		r1 = rf(ctx, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // ListTasks provides a mock function with given fields: ctx, opts

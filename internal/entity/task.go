@@ -7,6 +7,6 @@ import (
 type Task struct {
 	AbstractEntity
 
-	Title       string
-	CompletedAt *time.Time
+	Title       string     `json:"title"`
+	CompletedAt *time.Time `json:"completedAt"`
 }

@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../db/1_schema.sql:/docker-entrypoint-initdb.d/1_schema.sql
-      # - ../db/2_seed.sql:/docker-entrypoint-initdb.d/2_seed.sql
+      - ../db/2_seed.sql:/docker-entrypoint-initdb.d/2_seed.sql
 
   adminer:
     image: adminer

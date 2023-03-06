@@ -23,6 +23,7 @@ func newTaskController(baseRouter fiber.Router, taskRepo repository.TaskReposito
 	tasksRouter := baseRouter.Group("/tasks")
 	tasksRouter.Post("/", ctrl.CreateTask)
 	tasksRouter.Get("/", ctrl.ListTasks)
+	tasksRouter.Get("/:id", ctrl.GetTask)
 
 	return ctrl
 }
@@ -60,8 +61,8 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 }
 
 type ListTasksRequest struct {
-	PageId   string `json:"page_id"`
-	PageSize int    `json:"page_size" validate:"gte=0,lte=10"`
+	PageId   string `json:"pageId"`
+	PageSize int    `json:"pageSize" validate:"gte=0,lte=10"`
 }
 type ListTasksResponse struct {
 	Tasks []entity.Task `json:"tasks"`
@@ -88,4 +89,18 @@ func (tc taskController) ListTasks(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(ListTasksResponse{Tasks: tasks})
+}
+
+type GetTaskResponse struct {
+	Task entity.Task `json:"task"`
+}
+
+func (tc taskController) GetTask(c *fiber.Ctx) error {
+	// Get task
+	task, err := tc.taskRepo.GetTask(c.Context(), repository.TaskFilter{Id: c.Params("id")})
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(GetTaskResponse{Task: task})
 }

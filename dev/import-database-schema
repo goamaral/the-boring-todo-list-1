@@ -14,4 +14,5 @@ else
   exit 1
 fi
 
-PGPASSWORD=$DB_PASSWORD pg_dump --schema-only -d $DB_NAME -h $DB_HOST -p $DB_PORT -U $DB_USER > db/1_schema.sql
+PGPASSWORD=$DB_PASSWORD pg_dump -d $DB_NAME -h $DB_HOST -p $DB_PORT -U $DB_USER --schema-only > db/1_schema.sql
+PGPASSWORD=$DB_PASSWORD pg_dump -d $DB_NAME -h $DB_HOST -p $DB_PORT -U $DB_USER --column-inserts --data-only -t goose_db_version > db/2_seed.sql
