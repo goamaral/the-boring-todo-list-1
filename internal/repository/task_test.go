@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -37,22 +35,11 @@ func NewTaskRepository(t *testing.T) repository.TaskRepository {
 	return repository.NewTaskRepository(gormProvider)
 }
 
-func AddTask(t *testing.T, repo gormprovider.Repository, task *entity.Task) *entity.Task {
-	if err := repo.NewQuery(context.Background()).Create(task).Error; err != nil {
+func AddTask(t *testing.T, repo gormprovider.Repository[entity.Task], task *entity.Task) *entity.Task {
+	if err := repo.Create(context.Background(), task); err != nil {
 		t.Error(err)
 	}
 	return task
-}
-
-func TestTaskRepository_CreateTask(t *testing.T) {
-	repo := NewTaskRepository(t)
-	title := "Test Task"
-
-	task := entity.Task{Title: title}
-	err := repo.CreateTask(context.Background(), &task)
-	require.NoError(t, err)
-	assert.NotZero(t, task.Id)
-	assert.NotZero(t, task.CreatedAt)
 }
 
 func TestTaskRepository_TaskFilter(t *testing.T) {

@@ -3,26 +3,22 @@ package gormprovider
 import (
 	"fmt"
 	"io"
-	"strings"
+	"math/rand"
+	"strconv"
 	"testing"
 
 	_ "github.com/lib/pq"
-	"github.com/oklog/ulid/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DefaultPageSize = 10
 
-type provider struct {
-	*gorm.DB
+type Provider struct {
+	db *gorm.DB
 }
 
-type Provider interface {
-	NewRepository(tableName string) Repository
-}
-
-func NewProvider(args ...any) (Provider, error) {
+func NewProvider(args ...any) (*Provider, error) {
 	dsn := NewDSN()
 	for _, arg := range args {
 		switch arg.(type) {
@@ -37,51 +33,54 @@ func NewProvider(args ...any) (Provider, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &provider{DB: db}, nil
+	return &Provider{db: db}, nil
 }
 
-func NewTestProvider(t *testing.T, schema io.Reader, seed io.Reader) Provider {
+func NewTestProvider(t *testing.T, schema io.Reader, seed io.Reader) *Provider {
 	dsn := NewDSN()
 	testDsn := NewDSN()
-	testDsn.DbName = fmt.Sprintf("%s_test_%s", dsn.DbName, strings.ToLower(ulid.Make().String()))
+	testDsn.DbName = fmt.Sprintf("%s_test_%s", dsn.DbName, strconv.FormatUint(rand.Uint64(), 16))
 
 	// Create test database
 	db, err := connect(dsn)
+	if err != nil {
+		t.Error(err)
+	}
 	err = db.Exec("CREATE DATABASE " + testDsn.DbName).Error
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	// Connect to new database
 	testDb, err := connect(testDsn)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	// Drop database and close connections
 	t.Cleanup(func() {
 		err = disconnect(testDb)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		err = db.Exec("DROP DATABASE " + testDsn.DbName).Error
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		err = disconnect(db)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	})
 
 	// Load schema
 	schemaSql, err := io.ReadAll(schema)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	err = testDb.Exec(string(schemaSql)).Error
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	// Load seeds
@@ -91,20 +90,16 @@ func NewTestProvider(t *testing.T, schema io.Reader, seed io.Reader) Provider {
 	}
 	err = testDb.Exec(string(seedSql)).Error
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	// Reconnect so loaded schema is visible
 	testDb, err = reconnect(testDb, testDsn)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
-	return &provider{DB: testDb}
-}
-
-func (p *provider) NewRepository(tableName string) Repository {
-	return &repository{db: p.DB, tableName: tableName}
+	return &Provider{db: testDb}
 }
 
 func connect(dsn DSN) (*gorm.DB, error) {
