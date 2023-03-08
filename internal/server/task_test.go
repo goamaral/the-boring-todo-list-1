@@ -1,7 +1,6 @@
 package server_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -19,16 +18,10 @@ import (
 )
 
 func TestTask_CreateTask(t *testing.T) {
-	id := ulid.Make().String()
 	title := "title"
 
 	taskRepo := mocks.NewTaskRepository(t)
-	taskRepo.On("CreateTask", mock.Anything, mock.Anything).
-		Return(func(_ context.Context, task *entity.Task) error {
-			assert.Equal(t, title, task.Title)
-			task.AbstractEntity = entity.AbstractEntity{Id: id}
-			return nil
-		}, nil)
+	taskRepo.On("Create", mock.Anything, mock.Anything).Return(nil)
 
 	s := server.NewServer(taskRepo)
 	reqBody := server.CreateTaskRequest{Task: server.NewTask{Title: title}}
@@ -44,7 +37,7 @@ func TestTask_ListTasks(t *testing.T) {
 	reqBody := server.ListTasksRequest{}
 
 	taskRepo := mocks.NewTaskRepository(t)
-	taskRepo.On("ListTasks", mock.Anything, gormprovider.PaginationOption{PageId: reqBody.PageId, PageSize: reqBody.PageSize}).
+	taskRepo.On("List", mock.Anything, gormprovider.PaginationOption{PageId: reqBody.PageId, PageSize: reqBody.PageSize}).
 		Return([]entity.Task{{AbstractEntity: entity.AbstractEntity{Id: id}}}, nil)
 
 	s := server.NewServer(taskRepo)
@@ -60,8 +53,7 @@ func TestTask_GetTask(t *testing.T) {
 	task := entity.Task{AbstractEntity: entity.AbstractEntity{Id: ulid.Make().String()}}
 
 	taskRepo := mocks.NewTaskRepository(t)
-	taskRepo.On("GetTask", mock.Anything, repository.TaskFilter{Id: task.Id}).
-		Return(task, nil)
+	taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: task.Id}).Return(task, nil)
 
 	s := server.NewServer(taskRepo)
 	resBody := server.GetTaskResponse{}

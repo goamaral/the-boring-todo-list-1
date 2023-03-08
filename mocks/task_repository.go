@@ -6,6 +6,8 @@ import (
 	context "context"
 
 	entity "example.com/the-boring-to-do-list-1/internal/entity"
+	gorm "gorm.io/gorm"
+
 	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
 
 	mock "github.com/stretchr/testify/mock"
@@ -16,13 +18,13 @@ type TaskRepository struct {
 	mock.Mock
 }
 
-// CreateTask provides a mock function with given fields: ctx, task
-func (_m *TaskRepository) CreateTask(ctx context.Context, task *entity.Task) error {
-	ret := _m.Called(ctx, task)
+// Create provides a mock function with given fields: ctx, _a1
+func (_m *TaskRepository) Create(ctx context.Context, _a1 *entity.Task) error {
+	ret := _m.Called(ctx, _a1)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *entity.Task) error); ok {
-		r0 = rf(ctx, task)
+		r0 = rf(ctx, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -30,8 +32,29 @@ func (_m *TaskRepository) CreateTask(ctx context.Context, task *entity.Task) err
 	return r0
 }
 
-// GetTask provides a mock function with given fields: ctx, opts
-func (_m *TaskRepository) GetTask(ctx context.Context, opts ...gormprovider.QueryOption) (entity.Task, error) {
+// Delete provides a mock function with given fields: ctx, opts
+func (_m *TaskRepository) Delete(ctx context.Context, opts ...gormprovider.QueryOption) error {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, ...gormprovider.QueryOption) error); ok {
+		r0 = rf(ctx, opts...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Get provides a mock function with given fields: ctx, opts
+func (_m *TaskRepository) Get(ctx context.Context, opts ...gormprovider.QueryOption) (entity.Task, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -61,8 +84,8 @@ func (_m *TaskRepository) GetTask(ctx context.Context, opts ...gormprovider.Quer
 	return r0, r1
 }
 
-// ListTasks provides a mock function with given fields: ctx, opts
-func (_m *TaskRepository) ListTasks(ctx context.Context, opts ...gormprovider.QueryOption) ([]entity.Task, error) {
+// List provides a mock function with given fields: ctx, opts
+func (_m *TaskRepository) List(ctx context.Context, opts ...gormprovider.QueryOption) ([]entity.Task, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -92,6 +115,80 @@ func (_m *TaskRepository) ListTasks(ctx context.Context, opts ...gormprovider.Qu
 	}
 
 	return r0, r1
+}
+
+// NewQuery provides a mock function with given fields: ctx
+func (_m *TaskRepository) NewQuery(ctx context.Context) *gorm.DB {
+	ret := _m.Called(ctx)
+
+	var r0 *gorm.DB
+	if rf, ok := ret.Get(0).(func(context.Context) *gorm.DB); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gorm.DB)
+		}
+	}
+
+	return r0
+}
+
+// NewQueryWithOpts provides a mock function with given fields: ctx, opts
+func (_m *TaskRepository) NewQueryWithOpts(ctx context.Context, opts ...gormprovider.QueryOption) *gorm.DB {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gorm.DB
+	if rf, ok := ret.Get(0).(func(context.Context, ...gormprovider.QueryOption) *gorm.DB); ok {
+		r0 = rf(ctx, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gorm.DB)
+		}
+	}
+
+	return r0
+}
+
+// TableName provides a mock function with given fields:
+func (_m *TaskRepository) TableName() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// Update provides a mock function with given fields: ctx, update, opts
+func (_m *TaskRepository) Update(ctx context.Context, update *entity.Task, opts ...gormprovider.QueryOption) error {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, update)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *entity.Task, ...gormprovider.QueryOption) error); ok {
+		r0 = rf(ctx, update, opts...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewTaskRepository interface {

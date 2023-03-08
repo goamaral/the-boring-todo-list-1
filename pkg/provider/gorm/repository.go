@@ -6,25 +6,60 @@ import (
 	"gorm.io/gorm"
 )
 
-type repository struct {
-	db        *gorm.DB
-	tableName string
+type AbstractRepository[T any] struct {
+	db         *gorm.DB
+	tableName  string
+	primaryKey string
 }
 
-type Repository interface {
+type Repository[T any] interface {
 	TableName() string
 	NewQuery(ctx context.Context) *gorm.DB
 	NewQueryWithOpts(ctx context.Context, opts ...QueryOption) *gorm.DB
+	Create(ctx context.Context, entity *T) error
+	List(ctx context.Context, opts ...QueryOption) ([]T, error)
+	Get(ctx context.Context, opts ...QueryOption) (T, error)
+	Update(ctx context.Context, update *T, opts ...QueryOption) error
+	Delete(ctx context.Context, opts ...QueryOption) error
 }
 
-func (repo *repository) TableName() string {
+func NewAbstractRepository[T any](provider *Provider, tableName string, primaryKey string) AbstractRepository[T] {
+	return AbstractRepository[T]{db: provider.db, tableName: tableName, primaryKey: primaryKey}
+}
+
+func (repo *AbstractRepository[T]) TableName() string {
 	return repo.tableName
 }
 
-func (repo *repository) NewQuery(ctx context.Context) *gorm.DB {
+func (repo *AbstractRepository[T]) NewQuery(ctx context.Context) *gorm.DB {
 	return repo.db.WithContext(ctx).Table(repo.tableName)
 }
 
-func (repo *repository) NewQueryWithOpts(ctx context.Context, opts ...QueryOption) *gorm.DB {
+func (repo *AbstractRepository[T]) NewQueryWithOpts(ctx context.Context, opts ...QueryOption) *gorm.DB {
 	return ApplyQueryOpts(repo.NewQuery(ctx), opts...)
+}
+
+func (repo *AbstractRepository[T]) Create(ctx context.Context, entity *T) error {
+	return repo.NewQuery(ctx).Create(entity).Error
+}
+
+func (repo *AbstractRepository[T]) List(ctx context.Context, opts ...QueryOption) ([]T, error) {
+	var entities []T
+	err := repo.NewQueryWithOpts(ctx, opts...).Find(&entities).Error
+	return entities, err
+}
+
+func (repo *AbstractRepository[T]) Get(ctx context.Context, opts ...QueryOption) (T, error) {
+	var entity T
+	err := repo.NewQueryWithOpts(ctx, opts...).First(&entity).Error
+	return entity, err
+}
+
+func (repo *AbstractRepository[T]) Update(ctx context.Context, update *T, opts ...QueryOption) error {
+	return repo.NewQueryWithOpts(ctx, opts...).Updates(update).Error
+}
+
+func (repo *AbstractRepository[T]) Delete(ctx context.Context, opts ...QueryOption) error {
+	var entity T
+	return repo.NewQueryWithOpts(ctx, opts...).Delete(&entity).Error
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/oklog/ulid/v2"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -51,8 +52,11 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 	}
 
 	// Create task
-	task := entity.Task{Title: req.Task.Title}
-	err = tc.taskRepo.CreateTask(c.Context(), &task)
+	task := entity.Task{
+		AbstractEntity: entity.AbstractEntity{Id: ulid.Make().String()},
+		Title:          req.Task.Title,
+	}
+	err = tc.taskRepo.Create(c.Context(), &task)
 	if err != nil {
 		return err
 	}
@@ -83,7 +87,7 @@ func (tc taskController) ListTasks(c *fiber.Ctx) error {
 	}
 
 	// List tasks
-	tasks, err := tc.taskRepo.ListTasks(c.Context(), gormprovider.PaginationOption{PageId: req.PageId, PageSize: req.PageSize})
+	tasks, err := tc.taskRepo.List(c.Context(), gormprovider.PaginationOption{PageId: req.PageId, PageSize: req.PageSize})
 	if err != nil {
 		return err
 	}
@@ -97,7 +101,7 @@ type GetTaskResponse struct {
 
 func (tc taskController) GetTask(c *fiber.Ctx) error {
 	// Get task
-	task, err := tc.taskRepo.GetTask(c.Context(), repository.TaskFilter{Id: c.Params("id")})
+	task, err := tc.taskRepo.Get(c.Context(), repository.TaskFilter{Id: c.Params("id")})
 	if err != nil {
 		return err
 	}
