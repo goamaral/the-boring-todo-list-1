@@ -3,6 +3,7 @@ package server_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/oklog/ulid/v2"
@@ -17,10 +18,16 @@ import (
 	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
 )
 
+func NewTaskRepository(t *testing.T) *mocks.TaskRepository {
+	taskRepo := mocks.NewTaskRepository(t)
+	taskRepo.Mock.Test(nil)
+	return taskRepo
+}
+
 func TestTask_CreateTask(t *testing.T) {
 	title := "title"
 
-	taskRepo := mocks.NewTaskRepository(t)
+	taskRepo := NewTaskRepository(t)
 	taskRepo.On("Create", mock.Anything, mock.Anything).Return(nil)
 
 	s := server.NewServer(taskRepo)
@@ -36,9 +43,9 @@ func TestTask_ListTasks(t *testing.T) {
 	id := ulid.Make().String()
 	reqBody := server.ListTasksRequest{}
 
-	taskRepo := mocks.NewTaskRepository(t)
+	taskRepo := NewTaskRepository(t)
 	taskRepo.On("List", mock.Anything, gormprovider.PaginationOption{PageId: reqBody.PageId, PageSize: reqBody.PageSize}).
-		Return([]entity.Task{{AbstractEntity: entity.AbstractEntity{Id: id}}}, nil)
+		Return([]entity.Task{{AbstractEntity: gormprovider.AbstractEntity{Id: id}}}, nil)
 
 	s := server.NewServer(taskRepo)
 	resBody := server.ListTasksResponse{}
@@ -50,9 +57,9 @@ func TestTask_ListTasks(t *testing.T) {
 }
 
 func TestTask_GetTask(t *testing.T) {
-	task := entity.Task{AbstractEntity: entity.AbstractEntity{Id: ulid.Make().String()}}
+	task := entity.Task{AbstractEntity: gormprovider.AbstractEntity{Id: ulid.Make().String()}}
 
-	taskRepo := mocks.NewTaskRepository(t)
+	taskRepo := NewTaskRepository(t)
 	taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: task.Id}).Return(task, nil)
 
 	s := server.NewServer(taskRepo)
@@ -61,4 +68,51 @@ func TestTask_GetTask(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, res.StatusCode, resBody)
 	assert.Equal(t, task, resBody.Task)
+}
+
+func TestTask_UpdateTask(t *testing.T) {
+	id := ulid.Make().String()
+	title := "updated title"
+	completedAt := time.Now().UTC()
+	reqBody := server.UpdateTaskRequest{
+		Task: entity.Task{
+			Title:       title,
+			CompletedAt: &completedAt,
+		},
+	}
+
+	taskRepo := NewTaskRepository(t)
+	taskRepo.On("Update", mock.Anything,
+		&entity.Task{
+			AbstractEntity: gormprovider.AbstractEntity{Id: id},
+			Title:          title,
+			CompletedAt:    &completedAt,
+		},
+		repository.TaskFilter{Id: id},
+	).Return(nil)
+
+	s := server.NewServer(taskRepo)
+	var resBody string
+	res, err := sendRequest(t, s, fiber.MethodPut, fmt.Sprintf("/tasks/%s", id), buildReqBodyReader(t, reqBody), &resBody)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, res.StatusCode, resBody)
+}
+
+func TestTask_PatchTask(t *testing.T) {
+	id := ulid.Make().String()
+	title := "updated title"
+	reqBody := server.UpdateTaskRequest{
+		Task: entity.Task{Title: title},
+	}
+	taskRepo := NewTaskRepository(t)
+	taskRepo.On("Patch", mock.Anything,
+		&entity.Task{AbstractEntity: gormprovider.AbstractEntity{Id: id}, Title: title},
+		repository.TaskFilter{Id: id},
+	).Return(nil)
+
+	s := server.NewServer(taskRepo)
+	var resBody string
+	res, err := sendRequest(t, s, fiber.MethodPatch, fmt.Sprintf("/tasks/%s", id), buildReqBodyReader(t, reqBody), &resBody)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, res.StatusCode, resBody)
 }

@@ -25,6 +25,8 @@ func newTaskController(baseRouter fiber.Router, taskRepo repository.TaskReposito
 	tasksRouter.Post("/", ctrl.CreateTask)
 	tasksRouter.Get("/", ctrl.ListTasks)
 	tasksRouter.Get("/:id", ctrl.GetTask)
+	tasksRouter.Put("/:id", ctrl.UpdateTask)
+	tasksRouter.Patch("/:id", ctrl.PatchTask)
 
 	return ctrl
 }
@@ -40,7 +42,7 @@ type CreateTaskRequest struct {
 func (tc taskController) CreateTask(c *fiber.Ctx) error {
 	// Parse request
 	req := CreateTaskRequest{}
-	err := c.BodyParser(&req)
+	err := parseBody(c, &req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
@@ -53,7 +55,7 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 
 	// Create task
 	task := entity.Task{
-		AbstractEntity: entity.AbstractEntity{Id: ulid.Make().String()},
+		AbstractEntity: gormprovider.AbstractEntity{Id: ulid.Make().String()},
 		Title:          req.Task.Title,
 	}
 	err = tc.taskRepo.Create(c.Context(), &task)
@@ -75,7 +77,7 @@ type ListTasksResponse struct {
 func (tc taskController) ListTasks(c *fiber.Ctx) error {
 	// Parse request
 	req := ListTasksRequest{}
-	err := c.BodyParser(&req)
+	err := parseBody(c, &req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
@@ -107,4 +109,48 @@ func (tc taskController) GetTask(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(GetTaskResponse{Task: task})
+}
+
+type UpdateTaskRequest struct {
+	Task entity.Task `json:"task"`
+}
+
+func (tc taskController) UpdateTask(c *fiber.Ctx) error {
+	// Parse request
+	req := UpdateTaskRequest{}
+	err := parseBody(c, &req)
+	if err != nil {
+		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+	}
+	req.Task.AbstractEntity.Id = c.Params("id")
+
+	// Update task
+	err = tc.taskRepo.Update(c.Context(), &req.Task, repository.TaskFilter{Id: c.Params("id")})
+	if err != nil {
+		return err
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type PatchTaskRequest struct {
+	Task entity.Task `json:"task"`
+}
+
+func (tc taskController) PatchTask(c *fiber.Ctx) error {
+	// Parse request
+	req := PatchTaskRequest{}
+	err := parseBody(c, &req)
+	if err != nil {
+		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+	}
+	req.Task.AbstractEntity.Id = c.Params("id")
+
+	// Patch task
+	err = tc.taskRepo.Patch(c.Context(), &req.Task, repository.TaskFilter{Id: c.Params("id")})
+	if err != nil {
+		return err
+	}
+
+	return c.SendStatus(fiber.StatusOK)
 }
