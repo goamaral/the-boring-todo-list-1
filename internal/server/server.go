@@ -41,6 +41,6 @@ func (s server) Run() error {
 	return s.fiberApp.Listen("0.0.0.0:3000")
 }
 
-func (s server) Test(req *http.Request) (resp *http.Response, err error) {
+func (s server) Test(req *http.Request) (*http.Response, error) {
 	return s.fiberApp.Test(req, -1)
 }

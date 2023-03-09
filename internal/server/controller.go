@@ -15,3 +15,13 @@ type CreateResponse struct {
 func sendCreatedResponse(c *fiber.Ctx, id string) error {
 	return c.Status(fiber.StatusCreated).JSON(CreateResponse{Id: id})
 }
+
+func parseBody(c *fiber.Ctx, body any) error {
+	if c.Request().Header.ContentLength() != 0 {
+		err := c.BodyParser(body)
+		if err != nil {
+			return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		}
+	}
+	return nil
+}

@@ -154,6 +154,27 @@ func (_m *Repository[T]) NewQueryWithOpts(ctx context.Context, opts ...gormprovi
 	return r0
 }
 
+// Patch provides a mock function with given fields: ctx, patch, opts
+func (_m *Repository[T]) Patch(ctx context.Context, patch *T, opts ...gormprovider.QueryOption) error {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, patch)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *T, ...gormprovider.QueryOption) error); ok {
+		r0 = rf(ctx, patch, opts...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // TableName provides a mock function with given fields:
 func (_m *Repository[T]) TableName() string {
 	ret := _m.Called()

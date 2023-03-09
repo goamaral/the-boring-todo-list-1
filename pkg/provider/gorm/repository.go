@@ -20,6 +20,7 @@ type Repository[T any] interface {
 	List(ctx context.Context, opts ...QueryOption) ([]T, error)
 	Get(ctx context.Context, opts ...QueryOption) (T, error)
 	Update(ctx context.Context, update *T, opts ...QueryOption) error
+	Patch(ctx context.Context, patch *T, opts ...QueryOption) error
 	Delete(ctx context.Context, opts ...QueryOption) error
 }
 
@@ -56,7 +57,11 @@ func (repo *AbstractRepository[T]) Get(ctx context.Context, opts ...QueryOption)
 }
 
 func (repo *AbstractRepository[T]) Update(ctx context.Context, update *T, opts ...QueryOption) error {
-	return repo.NewQueryWithOpts(ctx, opts...).Updates(update).Error
+	return repo.NewQueryWithOpts(ctx, opts...).Select("*").Omit("created_at", "updated_at").Updates(update).Error
+}
+
+func (repo *AbstractRepository[T]) Patch(ctx context.Context, patch *T, opts ...QueryOption) error {
+	return repo.NewQueryWithOpts(ctx, opts...).Omit("created_at", "updated_at").Updates(patch).Error
 }
 
 func (repo *AbstractRepository[T]) Delete(ctx context.Context, opts ...QueryOption) error {
