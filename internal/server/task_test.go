@@ -36,11 +36,10 @@ func TestTask_CreateTask(t *testing.T) {
 
 	s := server.NewServer(taskRepo)
 	reqBody := server.CreateTaskRequest{Task: server.NewTask{Title: title}}
-	resBody := server.CreateResponse{}
-	res, err := sendRequest(t, s, fiber.MethodPost, "/tasks", buildReqBodyReader(t, reqBody), &resBody)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusCreated, res.StatusCode, resBody)
-	assert.NotZero(t, resBody.Id)
+	testRequest[server.CreateResponse](t, s, fiber.MethodPost, "/tasks", buildReqBodyReader(t, reqBody)).
+		Test(fiber.StatusCreated, func(resBody server.CreateResponse) {
+			assert.NotZero(t, resBody.Id)
+		})
 }
 
 func TestTask_ListTasks(t *testing.T) {
@@ -52,12 +51,11 @@ func TestTask_ListTasks(t *testing.T) {
 		Return([]entity.Task{{AbstractEntity: gormprovider.AbstractEntity{Id: id}}}, nil)
 
 	s := server.NewServer(taskRepo)
-	resBody := server.ListTasksResponse{}
-	res, err := sendRequest(t, s, fiber.MethodGet, "/tasks", buildReqBodyReader(t, reqBody), &resBody)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusOK, res.StatusCode, resBody)
-	require.Len(t, resBody.Tasks, 1)
-	assert.Equal(t, id, resBody.Tasks[0].Id)
+	testRequest[server.ListTasksResponse](t, s, fiber.MethodGet, "/tasks", buildReqBodyReader(t, reqBody)).
+		Test(fiber.StatusOK, func(resBody server.ListTasksResponse) {
+			require.Len(t, resBody.Tasks, 1)
+			assert.Equal(t, id, resBody.Tasks[0].Id)
+		})
 }
 
 func TestTask_GetTask(t *testing.T) {
@@ -67,11 +65,10 @@ func TestTask_GetTask(t *testing.T) {
 	taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: task.Id}).Return(task, nil)
 
 	s := server.NewServer(taskRepo)
-	resBody := server.GetTaskResponse{}
-	res, err := sendRequest(t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", task.Id), nil, &resBody)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusOK, res.StatusCode, resBody)
-	assert.Equal(t, task, resBody.Task)
+	testRequest[server.GetTaskResponse](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", task.Id), nil).
+		Test(fiber.StatusOK, func(resBody server.GetTaskResponse) {
+			assert.Equal(t, task, resBody.Task)
+		})
 }
 
 func TestTask_UpdateTask(t *testing.T) {
@@ -96,10 +93,8 @@ func TestTask_UpdateTask(t *testing.T) {
 	).Return(nil)
 
 	s := server.NewServer(taskRepo)
-	var resBody string
-	res, err := sendRequest(t, s, fiber.MethodPut, fmt.Sprintf("/tasks/%s", id), buildReqBodyReader(t, reqBody), &resBody)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusOK, res.StatusCode, resBody)
+	testRequest[string](t, s, fiber.MethodPut, fmt.Sprintf("/tasks/%s", id), buildReqBodyReader(t, reqBody)).
+		Test(fiber.StatusOK, nil)
 }
 
 func TestTask_PatchTask(t *testing.T) {
@@ -115,8 +110,6 @@ func TestTask_PatchTask(t *testing.T) {
 	).Return(nil)
 
 	s := server.NewServer(taskRepo)
-	var resBody string
-	res, err := sendRequest(t, s, fiber.MethodPatch, fmt.Sprintf("/tasks/%s", id), buildReqBodyReader(t, reqBody), &resBody)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusOK, res.StatusCode, resBody)
+	testRequest[string](t, s, fiber.MethodPatch, fmt.Sprintf("/tasks/%s", id), buildReqBodyReader(t, reqBody)).
+		Test(fiber.StatusOK, nil)
 }
