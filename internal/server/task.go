@@ -3,7 +3,6 @@ package server
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/oklog/ulid/v2"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -55,8 +54,7 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 
 	// Create task
 	task := entity.Task{
-		AbstractEntity: gormprovider.AbstractEntity{Id: ulid.Make().String()},
-		Title:          req.Task.Title,
+		Title: req.Task.Title,
 	}
 	err = tc.taskRepo.Create(c.Context(), &task)
 	if err != nil {

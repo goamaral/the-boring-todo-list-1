@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -43,5 +45,31 @@ func AddTask(t *testing.T, repo gormprovider.Repository[entity.Task], task *enti
 }
 
 func TestTaskRepository_TaskFilter(t *testing.T) {
-	// TODO
+	repo := NewTaskRepository(t)
+	taskA := AddTask(t, repo, &entity.Task{})
+	taskB := AddTask(t, repo, &entity.Task{})
+
+	type Test struct {
+		TaskFilter  repository.TaskFilter
+		ExpectedIds []string
+	}
+	runTest := func(test Test) func(t *testing.T) {
+		return func(t *testing.T) {
+			tasks, err := repo.List(context.Background(), test.TaskFilter)
+			require.NoError(t, err)
+			for i, task := range tasks {
+				assert.Equal(t, test.ExpectedIds[i], task.Id)
+			}
+		}
+	}
+
+	t.Run("Blank", runTest(Test{
+		TaskFilter:  repository.TaskFilter{},
+		ExpectedIds: []string{taskA.Id, taskB.Id},
+	}))
+
+	t.Run("Id", runTest(Test{
+		TaskFilter:  repository.TaskFilter{taskA.Id},
+		ExpectedIds: []string{taskA.Id},
+	}))
 }
