@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -28,7 +29,10 @@ func TestTask_CreateTask(t *testing.T) {
 	title := "title"
 
 	taskRepo := NewTaskRepository(t)
-	taskRepo.On("Create", mock.Anything, mock.Anything).Return(nil)
+	taskRepo.On("Create", mock.Anything, mock.Anything).Return(func(_ context.Context, task *entity.Task) error {
+		task.Id = ulid.Make().String()
+		return nil
+	})
 
 	s := server.NewServer(taskRepo)
 	reqBody := server.CreateTaskRequest{Task: server.NewTask{Title: title}}
