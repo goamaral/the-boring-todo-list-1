@@ -14,10 +14,9 @@ function handle_ctrl_c() {
 
 (docker compose -f "${DIR}/docker-compose.yml" up)&
 
-go install github.com/joho/godotenv/cmd/godotenv@latest
-go install github.com/cosmtrek/air@latest
-
 if [[ ! ${ARG_MAP["--skip-app"]} ]]; then
+  go install github.com/joho/godotenv/cmd/godotenv@latest
+  go install github.com/cosmtrek/air@latest
   godotenv air -build.cmd "go build -o tmp/main ./cmd/app"
 else
   sleep infinity
