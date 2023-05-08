@@ -49,7 +49,7 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 	// Validate request
 	err = tc.validate.Struct(req)
 	if err != nil {
-		return sendErrorResponse(c, fiber.StatusBadRequest, err)
+		return sendValidationErrorsResponse(c, err.(validator.ValidationErrors))
 	}
 
 	// Create task
@@ -83,7 +83,7 @@ func (tc taskController) ListTasks(c *fiber.Ctx) error {
 	// Validate request
 	err = tc.validate.Struct(req)
 	if err != nil {
-		return sendErrorResponse(c, fiber.StatusBadRequest, err)
+		return sendValidationErrorsResponse(c, err.(validator.ValidationErrors))
 	}
 
 	// List tasks
