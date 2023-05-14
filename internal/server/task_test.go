@@ -26,20 +26,28 @@ func NewTaskRepository(t *testing.T) *mocks.TaskRepository {
 }
 
 func TestTask_CreateTask(t *testing.T) {
-	title := "title"
+	t.Run("Created", func(t *testing.T) {
+		title := "title"
 
-	taskRepo := NewTaskRepository(t)
-	taskRepo.On("Create", mock.Anything, mock.Anything).Return(func(_ context.Context, task *entity.Task) error {
-		task.Id = ulid.Make().String()
-		return nil
+		taskRepo := NewTaskRepository(t)
+		taskRepo.On("Create", mock.Anything, mock.Anything).Return(func(_ context.Context, task *entity.Task) error {
+			task.Id = ulid.Make().String()
+			return nil
+		})
+
+		s := server.NewServer(taskRepo)
+		reqBody := server.CreateTaskRequest{Task: server.NewTask{Title: title}}
+		testRequest[server.CreateResponse](t, s, fiber.MethodPost, "/tasks", buildReqBodyReader(t, reqBody)).
+			Test(fiber.StatusCreated, func(resBody server.CreateResponse) {
+				assert.NotZero(t, resBody.Id)
+			})
 	})
 
-	s := server.NewServer(taskRepo)
-	reqBody := server.CreateTaskRequest{Task: server.NewTask{Title: title}}
-	testRequest[server.CreateResponse](t, s, fiber.MethodPost, "/tasks", buildReqBodyReader(t, reqBody)).
-		Test(fiber.StatusCreated, func(resBody server.CreateResponse) {
-			assert.NotZero(t, resBody.Id)
-		})
+	t.Run("BadRequest", func(t *testing.T) {
+		s := server.NewServer(nil)
+		reqBody := server.CreateTaskRequest{Task: server.NewTask{}}
+		testRequest[string](t, s, fiber.MethodPost, "/tasks", buildReqBodyReader(t, reqBody)).Test(fiber.StatusBadRequest, nil)
+	})
 }
 
 func TestTask_ListTasks(t *testing.T) {
