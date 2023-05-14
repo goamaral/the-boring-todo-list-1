@@ -21,7 +21,12 @@ type Server interface {
 }
 
 func NewServer(taskRepo repository.TaskRepository) *server {
-	fiberApp := fiber.New()
+	fiberApp := fiber.New(fiber.Config{
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			// TODO: Add logger
+			return c.Status(fiber.StatusInternalServerError).SendString("Internal error")
+		},
+	})
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
 	fiberApp.Use(recover.New())
 	fiberApp.Get("/health", func(c *fiber.Ctx) error {
