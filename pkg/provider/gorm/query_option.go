@@ -31,3 +31,7 @@ func (opt PaginationOption) Apply(db *gorm.DB) *gorm.DB {
 
 	return db
 }
+
+func OptionalValue[T any](value T) *T {
+	return &value
+}

@@ -55,7 +55,7 @@ func TestTask_ListTasks(t *testing.T) {
 	reqBody := server.ListTasksRequest{}
 
 	taskRepo := NewTaskRepository(t)
-	taskRepo.On("List", mock.Anything, gormprovider.PaginationOption{PageId: reqBody.PageId, PageSize: reqBody.PageSize}).
+	taskRepo.On("List", mock.Anything, gormprovider.PaginationOption{PageId: reqBody.PageId, PageSize: reqBody.PageSize}, repository.TaskFilter{}).
 		Return([]entity.Task{{AbstractEntity: gormprovider.AbstractEntity{Id: id}}}, nil)
 
 	s := server.NewServer(taskRepo)
@@ -70,7 +70,7 @@ func TestTask_GetTask(t *testing.T) {
 	task := entity.Task{AbstractEntity: gormprovider.AbstractEntity{Id: ulid.Make().String()}}
 
 	taskRepo := NewTaskRepository(t)
-	taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: task.Id}).Return(task, nil)
+	taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: &task.Id}).Return(task, nil)
 
 	s := server.NewServer(taskRepo)
 	testRequest[server.GetTaskResponse](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", task.Id), nil).
@@ -97,7 +97,7 @@ func TestTask_UpdateTask(t *testing.T) {
 			Title:          title,
 			CompletedAt:    &completedAt,
 		},
-		repository.TaskFilter{Id: id},
+		repository.TaskFilter{Id: &id},
 	).Return(nil)
 
 	s := server.NewServer(taskRepo)
@@ -114,7 +114,7 @@ func TestTask_PatchTask(t *testing.T) {
 	taskRepo := NewTaskRepository(t)
 	taskRepo.On("Patch", mock.Anything,
 		&entity.Task{AbstractEntity: gormprovider.AbstractEntity{Id: id}, Title: title},
-		repository.TaskFilter{Id: id},
+		repository.TaskFilter{Id: &id},
 	).Return(nil)
 
 	s := server.NewServer(taskRepo)
@@ -125,7 +125,7 @@ func TestTask_PatchTask(t *testing.T) {
 func TestTask_DeleteTask(t *testing.T) {
 	id := ulid.Make().String()
 	taskRepo := NewTaskRepository(t)
-	taskRepo.On("Delete", mock.Anything, repository.TaskFilter{Id: id}).Return(nil)
+	taskRepo.On("Delete", mock.Anything, repository.TaskFilter{Id: &id}).Return(nil)
 
 	s := server.NewServer(taskRepo)
 	testRequest[string](t, s, fiber.MethodDelete, fmt.Sprintf("/tasks/%s", id), nil).Test(fiber.StatusOK, nil)
