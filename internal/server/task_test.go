@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -67,16 +68,28 @@ func TestTask_ListTasks(t *testing.T) {
 }
 
 func TestTask_GetTask(t *testing.T) {
-	task := entity.Task{AbstractEntity: gormprovider.AbstractEntity{Id: ulid.Make().String()}}
+	t.Run("OK", func(t *testing.T) {
+		task := entity.Task{AbstractEntity: gormprovider.AbstractEntity{Id: ulid.Make().String()}}
 
-	taskRepo := NewTaskRepository(t)
-	taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: &task.Id}).Return(task, nil)
+		taskRepo := NewTaskRepository(t)
+		taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: &task.Id}).Return(task, nil)
 
-	s := server.NewServer(taskRepo)
-	testRequest[server.GetTaskResponse](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", task.Id), nil).
-		Test(fiber.StatusOK, func(resBody server.GetTaskResponse) {
-			assert.Equal(t, task, resBody.Task)
-		})
+		s := server.NewServer(taskRepo)
+		testRequest[server.GetTaskResponse](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", task.Id), nil).
+			Test(fiber.StatusOK, func(resBody server.GetTaskResponse) {
+				assert.Equal(t, task, resBody.Task)
+			})
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		taskId := ulid.Make().String()
+
+		taskRepo := NewTaskRepository(t)
+		taskRepo.On("Get", mock.Anything, repository.TaskFilter{Id: &taskId}).Return(entity.Task{}, gorm.ErrRecordNotFound)
+
+		s := server.NewServer(taskRepo)
+		testRequest[string](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", taskId), nil).Test(fiber.StatusNotFound, nil)
+	})
 }
 
 func TestTask_UpdateTask(t *testing.T) {

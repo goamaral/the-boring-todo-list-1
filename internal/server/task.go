@@ -1,8 +1,12 @@
 package server
 
 import (
+	"errors"
+	"net/http"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -42,7 +46,7 @@ type CreateTaskRequest struct {
 func (tc taskController) CreateTask(c *fiber.Ctx) error {
 	// Parse request
 	req := CreateTaskRequest{}
-	err := parseBody(c, &req)
+	err := c.BodyParser(&req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
@@ -77,7 +81,7 @@ type ListTasksResponse struct {
 func (tc taskController) ListTasks(c *fiber.Ctx) error {
 	// Parse request
 	req := ListTasksRequest{}
-	err := parseBody(c, &req)
+	err := c.BodyParser(&req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
@@ -109,6 +113,10 @@ func (tc taskController) GetTask(c *fiber.Ctx) error {
 	// Get task
 	task, err := tc.taskRepo.Get(c.Context(), repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return sendDefaultStatusResponse(c, http.StatusNotFound)
+		}
+
 		return err
 	}
 
@@ -122,7 +130,7 @@ type UpdateTaskRequest struct {
 func (tc taskController) UpdateTask(c *fiber.Ctx) error {
 	// Parse request
 	req := UpdateTaskRequest{}
-	err := parseBody(c, &req)
+	err := c.BodyParser(&req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
@@ -144,7 +152,7 @@ type PatchTaskRequest struct {
 func (tc taskController) PatchTask(c *fiber.Ctx) error {
 	// Parse request
 	req := PatchTaskRequest{}
-	err := parseBody(c, &req)
+	err := c.BodyParser(&req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
