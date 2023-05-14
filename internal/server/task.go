@@ -66,8 +66,9 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 }
 
 type ListTasksRequest struct {
-	PageId   string `json:"pageId"`
-	PageSize int    `json:"pageSize" validate:"gte=0,lte=10"`
+	PageId     string `json:"pageId"`
+	PageSize   int    `json:"pageSize" validate:"gte=0,lte=10"`
+	IsComplete *bool  `json:"isComplete"`
 }
 type ListTasksResponse struct {
 	Tasks []entity.Task `json:"tasks"`
@@ -88,7 +89,11 @@ func (tc taskController) ListTasks(c *fiber.Ctx) error {
 	}
 
 	// List tasks
-	tasks, err := tc.taskRepo.List(c.Context(), gormprovider.PaginationOption{PageId: req.PageId, PageSize: req.PageSize})
+	tasks, err := tc.taskRepo.List(
+		c.Context(),
+		gormprovider.PaginationOption{PageId: req.PageId, PageSize: req.PageSize},
+		repository.TaskFilter{IsComplete: req.IsComplete},
+	)
 	if err != nil {
 		return err
 	}
@@ -102,7 +107,7 @@ type GetTaskResponse struct {
 
 func (tc taskController) GetTask(c *fiber.Ctx) error {
 	// Get task
-	task, err := tc.taskRepo.Get(c.Context(), repository.TaskFilter{Id: c.Params("id")})
+	task, err := tc.taskRepo.Get(c.Context(), repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
 	if err != nil {
 		return err
 	}
@@ -124,7 +129,7 @@ func (tc taskController) UpdateTask(c *fiber.Ctx) error {
 	req.Task.AbstractEntity.Id = c.Params("id")
 
 	// Update task
-	err = tc.taskRepo.Update(c.Context(), &req.Task, repository.TaskFilter{Id: c.Params("id")})
+	err = tc.taskRepo.Update(c.Context(), &req.Task, repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
 	if err != nil {
 		return err
 	}
@@ -146,7 +151,7 @@ func (tc taskController) PatchTask(c *fiber.Ctx) error {
 	req.Task.AbstractEntity.Id = c.Params("id")
 
 	// Patch task
-	err = tc.taskRepo.Patch(c.Context(), &req.Task, repository.TaskFilter{Id: c.Params("id")})
+	err = tc.taskRepo.Patch(c.Context(), &req.Task, repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
 	if err != nil {
 		return err
 	}
@@ -156,7 +161,7 @@ func (tc taskController) PatchTask(c *fiber.Ctx) error {
 
 func (tc taskController) DeleteTask(c *fiber.Ctx) error {
 	// Delete task
-	err := tc.taskRepo.Delete(c.Context(), repository.TaskFilter{Id: c.Params("id")})
+	err := tc.taskRepo.Delete(c.Context(), repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
 	if err != nil {
 		return err
 	}

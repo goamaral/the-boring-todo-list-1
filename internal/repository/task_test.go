@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -46,7 +47,7 @@ func AddTask(t *testing.T, repo gormprovider.Repository[entity.Task], task *enti
 
 func TestTaskRepository_TaskFilter(t *testing.T) {
 	repo := NewTaskRepository(t)
-	taskA := AddTask(t, repo, &entity.Task{})
+	taskA := AddTask(t, repo, &entity.Task{CompletedAt: gormprovider.OptionalValue(time.Now())})
 	taskB := AddTask(t, repo, &entity.Task{})
 
 	type Test struct {
@@ -57,9 +58,10 @@ func TestTaskRepository_TaskFilter(t *testing.T) {
 		return func(t *testing.T) {
 			tasks, err := repo.List(context.Background(), test.TaskFilter)
 			require.NoError(t, err)
-			for i, task := range tasks {
-				assert.Equal(t, test.ExpectedIds[i], task.Id)
+			for i, expectedTaskId := range test.ExpectedIds {
+				assert.Equal(t, expectedTaskId, tasks[i].Id)
 			}
+			assert.GreaterOrEqual(t, len(tasks), len(test.ExpectedIds))
 		}
 	}
 
@@ -69,7 +71,12 @@ func TestTaskRepository_TaskFilter(t *testing.T) {
 	}))
 
 	t.Run("Id", runTest(Test{
-		TaskFilter:  repository.TaskFilter{taskA.Id},
+		TaskFilter:  repository.TaskFilter{Id: &taskA.Id},
+		ExpectedIds: []string{taskA.Id},
+	}))
+
+	t.Run("IsComplete", runTest(Test{
+		TaskFilter:  repository.TaskFilter{IsComplete: gormprovider.OptionalValue(true)},
 		ExpectedIds: []string{taskA.Id},
 	}))
 }

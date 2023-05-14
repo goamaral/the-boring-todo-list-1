@@ -62,46 +62,16 @@ func (repo *AbstractRepository[T]) Get(ctx context.Context, opts ...QueryOption)
 }
 
 func (repo *AbstractRepository[T]) Update(ctx context.Context, update *T, opts ...QueryOption) error {
-	return repo.provider.NewTransaction(ctx, func(txCtx TxContext) error {
-		count, err := repo.Count(txCtx, opts...)
-		if err != nil {
-			return err
-		}
-		if count == 0 {
-			return gorm.ErrRecordNotFound
-		}
-
-		return repo.NewQueryWithOpts(ctx, opts...).Select("*").Omit("created_at", "updated_at").Updates(update).Error
-	})
+	return repo.NewQueryWithOpts(ctx, opts...).Select("*").Omit("created_at", "updated_at").Updates(update).Error
 }
 
 func (repo *AbstractRepository[T]) Patch(ctx context.Context, patch *T, opts ...QueryOption) error {
-	return repo.provider.NewTransaction(ctx, func(txCtx TxContext) error {
-		count, err := repo.Count(txCtx, opts...)
-		if err != nil {
-			return err
-		}
-		if count == 0 {
-			return gorm.ErrRecordNotFound
-		}
-
-		return repo.NewQueryWithOpts(ctx, opts...).Omit("created_at", "updated_at").Updates(patch).Error
-	})
+	return repo.NewQueryWithOpts(ctx, opts...).Omit("created_at", "updated_at").Updates(patch).Error
 }
 
 func (repo *AbstractRepository[T]) Delete(ctx context.Context, opts ...QueryOption) error {
-	return repo.provider.NewTransaction(ctx, func(txCtx TxContext) error {
-		count, err := repo.Count(txCtx, opts...)
-		if err != nil {
-			return err
-		}
-		if count == 0 {
-			return gorm.ErrRecordNotFound
-		}
-
-		var entity T
-		return repo.NewQueryWithOpts(ctx, opts...).Delete(&entity).Error
-	})
+	var entity T
+	return repo.NewQueryWithOpts(ctx, opts...).Delete(&entity).Error
 }
 
 func (repo *AbstractRepository[T]) Count(ctx context.Context, opts ...QueryOption) (int64, error) {

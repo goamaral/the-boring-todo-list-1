@@ -3,11 +3,12 @@ package repository
 import "gorm.io/gorm"
 
 type TaskFilter struct {
-	Id string
+	Id         *string
+	IsComplete *bool
 }
 
 func (opt TaskFilter) Apply(db *gorm.DB) *gorm.DB {
-	if opt.Id != "" {
+	if opt.Id != nil {
 		db.Where("id = ?", opt.Id)
 	}
 
