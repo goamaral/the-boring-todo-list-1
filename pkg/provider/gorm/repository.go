@@ -7,7 +7,7 @@ import (
 )
 
 type AbstractRepository[T any] struct {
-	db         *gorm.DB
+	provider   *Provider
 	tableName  string
 	primaryKey string
 }
@@ -25,7 +25,7 @@ type Repository[T any] interface {
 }
 
 func NewAbstractRepository[T any](provider *Provider, tableName string, primaryKey string) AbstractRepository[T] {
-	return AbstractRepository[T]{db: provider.db, tableName: tableName, primaryKey: primaryKey}
+	return AbstractRepository[T]{provider: provider, tableName: tableName, primaryKey: primaryKey}
 }
 
 func (repo *AbstractRepository[T]) TableName() string {
@@ -33,7 +33,12 @@ func (repo *AbstractRepository[T]) TableName() string {
 }
 
 func (repo *AbstractRepository[T]) NewQuery(ctx context.Context) *gorm.DB {
-	return repo.db.WithContext(ctx).Table(repo.tableName)
+	db := repo.provider.db
+	txCtx, ok := ctx.(TxContext)
+	if ok {
+		db = txCtx.txDB
+	}
+	return db.WithContext(ctx).Table(repo.tableName)
 }
 
 func (repo *AbstractRepository[T]) NewQueryWithOpts(ctx context.Context, opts ...QueryOption) *gorm.DB {
@@ -65,6 +70,22 @@ func (repo *AbstractRepository[T]) Patch(ctx context.Context, patch *T, opts ...
 }
 
 func (repo *AbstractRepository[T]) Delete(ctx context.Context, opts ...QueryOption) error {
-	var entity T
-	return repo.NewQueryWithOpts(ctx, opts...).Delete(&entity).Error
+	return repo.provider.NewTransaction(ctx, func(txCtx TxContext) error {
+		count, err := repo.Count(txCtx, opts...)
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return gorm.ErrRecordNotFound
+		}
+
+		var entity T
+		return repo.NewQueryWithOpts(ctx, opts...).Delete(&entity).Error
+	})
+}
+
+func (repo *AbstractRepository[T]) Count(ctx context.Context, opts ...QueryOption) (int64, error) {
+	var count int64
+	err := repo.NewQueryWithOpts(ctx, opts...).Count(&count).Error
+	return count, err
 }

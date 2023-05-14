@@ -113,3 +113,12 @@ func TestTask_PatchTask(t *testing.T) {
 	testRequest[string](t, s, fiber.MethodPatch, fmt.Sprintf("/tasks/%s", id), buildReqBodyReader(t, reqBody)).
 		Test(fiber.StatusOK, nil)
 }
+
+func TestTask_DeleteTask(t *testing.T) {
+	id := ulid.Make().String()
+	taskRepo := NewTaskRepository(t)
+	taskRepo.On("Delete", mock.Anything, repository.TaskFilter{Id: id}).Return(nil)
+
+	s := server.NewServer(taskRepo)
+	testRequest[string](t, s, fiber.MethodDelete, fmt.Sprintf("/tasks/%s", id), nil).Test(fiber.StatusOK, nil)
+}
