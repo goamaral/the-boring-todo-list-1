@@ -26,6 +26,7 @@ func newTaskController(baseRouter fiber.Router, taskRepo repository.TaskReposito
 	tasksRouter.Get("/:id", ctrl.GetTask)
 	tasksRouter.Put("/:id", ctrl.UpdateTask)
 	tasksRouter.Patch("/:id", ctrl.PatchTask)
+	tasksRouter.Delete("/:id", ctrl.DeleteTask)
 
 	return ctrl
 }
@@ -146,6 +147,16 @@ func (tc taskController) PatchTask(c *fiber.Ctx) error {
 
 	// Patch task
 	err = tc.taskRepo.Patch(c.Context(), &req.Task, repository.TaskFilter{Id: c.Params("id")})
+	if err != nil {
+		return err
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (tc taskController) DeleteTask(c *fiber.Ctx) error {
+	// Delete task
+	err := tc.taskRepo.Delete(c.Context(), repository.TaskFilter{Id: c.Params("id")})
 	if err != nil {
 		return err
 	}
