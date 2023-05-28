@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 set -eo pipefail
+SCRIPT_DIR=${0%/*}
 
 # Set default ENV_PATH
 if [[ -z $ENV_PATH ]]; then
-  ENV_PATH="${DIR}/../.env"
+  ENV_PATH="${SCRIPT_DIR}/../secrets/.env"
 fi
 
 # Load .env
-if [[ -e .env ]]; then
-  export $(cat .env | xargs)
+if [[ -e $ENV_PATH ]]; then
+  export $(cat $ENV_PATH | xargs)
 else
   echo "Missing .env file"
   exit 1

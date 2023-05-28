@@ -13,7 +13,7 @@ type AbstractEntity struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func (ae *AbstractEntity) BeforeCreate(tx *gorm.DB) error {
-	ae.Id = ulid.Make().String()
+func (e *AbstractEntity) BeforeCreate(tx *gorm.DB) error {
+	e.Id = ulid.Make().String()
 	return nil
 }

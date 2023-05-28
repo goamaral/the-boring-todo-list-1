@@ -9,6 +9,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+type absctractController struct {
+	validate *validator.Validate
+}
+
+func newAbstractController() absctractController {
+	return absctractController{
+		validate: validator.New(),
+	}
+}
+
 func sendDefaultStatusResponse(c *fiber.Ctx, status int) error {
 	var msg string
 

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"example.com/the-boring-to-do-list-1/internal/entity"
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
+	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
 )
 
 const (
@@ -17,6 +17,6 @@ type TaskRepository interface {
 	gormprovider.Repository[entity.Task]
 }
 
-func NewTaskRepository(gormProvider *gormprovider.Provider) *taskRepository {
-	return &taskRepository{AbstractRepository: gormprovider.NewAbstractRepository[entity.Task](gormProvider, "tasks", "id")}
+func NewTaskRepository(gormProvider *gormprovider.Provider) TaskRepository {
+	return &taskRepository{AbstractRepository: gormprovider.NewAbstractRepository[entity.Task](gormProvider, tasksTableName, "id")}
 }

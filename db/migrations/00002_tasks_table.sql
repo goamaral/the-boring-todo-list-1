@@ -5,7 +5,8 @@ CREATE TABLE "tasks" (
   "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "title" VARCHAR(255) NOT NULL,
-  "completed_at" TIMESTAMP
+  "completed_at" TIMESTAMP/*,
+  "user_id" CHAR(26) NOT NULL REFERENCES users (id)*/
 );
 
 -- +goose StatementEnd

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -8,10 +9,12 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
 	"example.com/the-boring-to-do-list-1/internal/repository"
+	"example.com/the-boring-to-do-list-1/pkg/jwtprovider"
 )
 
 type server struct {
 	fiberApp       *fiber.App
+	authController *authController
 	taskController *taskController
 }
 
@@ -20,11 +23,12 @@ type Server interface {
 	Test(req *http.Request) (resp *http.Response, err error)
 }
 
-func NewServer(taskRepo repository.TaskRepository) *server {
+func NewServer(jwtProvider *jwtprovider.Provider, taskRepo repository.TaskRepository, userRepo repository.UserRepository) *server {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// TODO: Add logger
-			return c.Status(fiber.StatusInternalServerError).SendString("Internal error")
+			fmt.Printf("Error: %s", err.Error())
+			return sendDefaultStatusResponse(c, fiber.StatusInternalServerError)
 		},
 	})
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
@@ -35,6 +39,7 @@ func NewServer(taskRepo repository.TaskRepository) *server {
 
 	s := &server{
 		fiberApp:       fiberApp,
+		authController: newAuthController(fiberApp, jwtProvider, userRepo),
 		taskController: newTaskController(fiberApp, taskRepo),
 	}
 

@@ -14,13 +14,13 @@ import (
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
+	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
 )
 
 func NewTaskRepository(t *testing.T) repository.TaskRepository {
 	_, b, _, _ := runtime.Caller(0)
 	folderPath := filepath.Dir(b)
-	if err := godotenv.Load(folderPath + "/../../.env"); err != nil {
+	if err := godotenv.Load(folderPath + "/../../secrets/.env"); err != nil {
 		t.Error(err)
 	}
 
@@ -47,8 +47,8 @@ func AddTask(t *testing.T, repo gormprovider.Repository[entity.Task], task *enti
 
 func TestTaskRepository_TaskFilter(t *testing.T) {
 	repo := NewTaskRepository(t)
-	taskA := AddTask(t, repo, &entity.Task{CompletedAt: gormprovider.OptionalValue(time.Now())})
-	taskB := AddTask(t, repo, &entity.Task{})
+	taskA := AddTask(t, repo, &entity.Task{})
+	taskB := AddTask(t, repo, &entity.Task{CompletedAt: gormprovider.OptionalValue(time.Now())})
 
 	type Test struct {
 		TaskFilter  repository.TaskFilter
@@ -77,6 +77,6 @@ func TestTaskRepository_TaskFilter(t *testing.T) {
 
 	t.Run("IsComplete", runTest(Test{
 		TaskFilter:  repository.TaskFilter{IsComplete: gormprovider.OptionalValue(true)},
-		ExpectedIds: []string{taskA.Id},
+		ExpectedIds: []string{taskB.Id},
 	}))
 }

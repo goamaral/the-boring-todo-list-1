@@ -34,6 +34,7 @@ With it I am able to try and implement new technologies in a simple format.
 - [Validator - Struct validation](https://github.com/go-playground/validator)
 - [GORM - ORM](https://github.com/go-gorm/gorm)
 - [Goose - Migrations](https://github.com/pressly/goose)
+- [jwt-go - JWT](https://github.com/golang-jwt/jwt)
 
 ### Frontend
 Not choosen yet

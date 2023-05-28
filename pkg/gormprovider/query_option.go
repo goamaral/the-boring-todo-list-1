@@ -13,6 +13,7 @@ func ApplyQueryOpts(qry *gorm.DB, opts ...QueryOption) *gorm.DB {
 	return qry
 }
 
+/* PaginationOption */
 type PaginationOption struct {
 	PageId   string
 	PageSize int
@@ -32,6 +33,13 @@ func (opt PaginationOption) Apply(db *gorm.DB) *gorm.DB {
 	return db
 }
 
-func OptionalValue[T any](value T) *T {
-	return &value
+/* SelectOption */
+func SelectOption(fields ...string) selectOption {
+	return selectOption(fields)
+}
+
+type selectOption []string
+
+func (opt selectOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Select(opt)
 }
