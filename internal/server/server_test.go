@@ -66,7 +66,7 @@ func testRequest[T any](t *testing.T, s server.Server, method string, route stri
 
 func TestServer_HealthCheck(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
-		s := server.NewServer(nil)
+		s := server.NewServer(nil, nil, nil)
 
 		testRequest[string](t, s, fiber.MethodGet, "/health", nil).
 			Test(fiber.StatusOK, func(resBody string) {

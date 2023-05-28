@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -eo pipefail
-DIR=${0%/*}
+SCRIPT_DIR=${0%/*}
 
 # Set default ENV_PATH
 if [[ -z $ENV_PATH ]]; then
-  ENV_PATH="${DIR}/../.env"
+  ENV_PATH="${SCRIPT_DIR}/../secrets/.env"
 fi
 
 # Load .env
@@ -20,4 +20,4 @@ go install github.com/pressly/goose/v3/cmd/goose@latest
 # Run goose
 export GOOSE_DRIVER=postgres
 export GOOSE_DBSTRING="postgresql://${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}?password=${DB_PASSWORD}"
-goose -dir $DIR/../db/migrations -s $@
+goose -dir $SCRIPT_DIR/../db/migrations -s $@

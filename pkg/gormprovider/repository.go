@@ -2,6 +2,7 @@ package gormprovider
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -18,7 +19,7 @@ type Repository[T any] interface {
 	NewQueryWithOpts(ctx context.Context, opts ...QueryOption) *gorm.DB
 	Create(ctx context.Context, entity *T) error
 	List(ctx context.Context, opts ...QueryOption) ([]T, error)
-	Get(ctx context.Context, opts ...QueryOption) (T, error)
+	Get(ctx context.Context, opts ...QueryOption) (T, bool, error)
 	Update(ctx context.Context, update *T, opts ...QueryOption) error
 	Patch(ctx context.Context, patch *T, opts ...QueryOption) error
 	Delete(ctx context.Context, opts ...QueryOption) error
@@ -55,10 +56,16 @@ func (repo *AbstractRepository[T]) List(ctx context.Context, opts ...QueryOption
 	return entities, err
 }
 
-func (repo *AbstractRepository[T]) Get(ctx context.Context, opts ...QueryOption) (T, error) {
+func (repo *AbstractRepository[T]) Get(ctx context.Context, opts ...QueryOption) (T, bool, error) {
 	var entity T
 	err := repo.NewQueryWithOpts(ctx, opts...).First(&entity).Error
-	return entity, err
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return entity, false, nil
+	}
+	if err != nil {
+		return entity, false, err
+	}
+	return entity, true, nil
 }
 
 func (repo *AbstractRepository[T]) Update(ctx context.Context, update *T, opts ...QueryOption) error {

@@ -1,36 +1,34 @@
 package server
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
+	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
 )
 
 type taskController struct {
+	absctractController
 	taskRepo repository.TaskRepository
-	validate *validator.Validate
 }
 
 func newTaskController(baseRouter fiber.Router, taskRepo repository.TaskRepository) *taskController {
 	ctrl := &taskController{
-		taskRepo: taskRepo,
-		validate: validator.New(),
+		absctractController: newAbstractController(),
+		taskRepo:            taskRepo,
 	}
 
-	tasksRouter := baseRouter.Group("/tasks")
-	tasksRouter.Post("/", ctrl.CreateTask)
-	tasksRouter.Get("/", ctrl.ListTasks)
-	tasksRouter.Get("/:id", ctrl.GetTask)
-	tasksRouter.Put("/:id", ctrl.UpdateTask)
-	tasksRouter.Patch("/:id", ctrl.PatchTask)
-	tasksRouter.Delete("/:id", ctrl.DeleteTask)
+	router := baseRouter.Group("/tasks")
+	router.Post("/", ctrl.CreateTask)
+	router.Get("/", ctrl.ListTasks)
+	router.Get("/:id", ctrl.GetTask)
+	router.Put("/:id", ctrl.UpdateTask)
+	router.Patch("/:id", ctrl.PatchTask)
+	router.Delete("/:id", ctrl.DeleteTask)
 
 	return ctrl
 }
@@ -111,13 +109,12 @@ type GetTaskResponse struct {
 
 func (tc taskController) GetTask(c *fiber.Ctx) error {
 	// Get task
-	task, err := tc.taskRepo.Get(c.Context(), repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
+	task, found, err := tc.taskRepo.Get(c.Context(), repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return sendDefaultStatusResponse(c, http.StatusNotFound)
-		}
-
 		return err
+	}
+	if !found {
+		return sendDefaultStatusResponse(c, http.StatusNotFound)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(GetTaskResponse{Task: task})

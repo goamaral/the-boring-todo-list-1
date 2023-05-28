@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.7 (Debian 14.7-1.pgdg110+1)
+-- Dumped from database version 14.4 (Debian 14.4-1.pgdg110+1)
 -- Dumped by pg_dump version 15.2
 
 SET statement_timeout = 0;
@@ -81,6 +81,21 @@ CREATE TABLE public.tasks (
 ALTER TABLE public.tasks OWNER TO boring;
 
 --
+-- Name: users; Type: TABLE; Schema: public; Owner: boring
+--
+
+CREATE TABLE public.users (
+    id character(26) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    username character varying(255) NOT NULL,
+    encrypted_password bytea NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO boring;
+
+--
 -- Name: goose_db_version id; Type: DEFAULT; Schema: public; Owner: boring
 --
 
@@ -101,6 +116,22 @@ ALTER TABLE ONLY public.goose_db_version
 
 ALTER TABLE ONLY public.tasks
     ADD CONSTRAINT tasks_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
 
 
 --

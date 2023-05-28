@@ -9,8 +9,16 @@ type TaskFilter struct {
 
 func (opt TaskFilter) Apply(db *gorm.DB) *gorm.DB {
 	if opt.Id != nil {
-		db.Where("id = ?", opt.Id)
+		db = db.Where("id", *opt.Id)
 	}
 
-	return db
+	if opt.IsComplete != nil {
+		if *opt.IsComplete {
+			db = db.Where("completed_at IS NOT NULL")
+		} else {
+			db = db.Where("completed_at IS NULL")
+		}
+	}
+
+	return db.Debug()
 }

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -eo pipefail
+SCRIPT_DIR=${0%/*}
+
+if [[ $# -ne 1 ]]; then
+  echo "Email is required"
+  exit 1
+fi
+
+ssh-keygen -a 100 -t ecdsa -m PEM -f $SCRIPT_DIR/../secrets/ecdsa -C $1
+ssh-keygen -a 100 -t ecdsa -m PEM -f $SCRIPT_DIR/../secrets/ecdsa -e -C $1 > $SCRIPT_DIR/../secrets/ecdsa.pub

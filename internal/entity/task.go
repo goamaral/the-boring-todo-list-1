@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/provider/gorm"
+	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
 )
 
 type Task struct {

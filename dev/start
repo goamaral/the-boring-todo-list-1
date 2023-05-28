@@ -9,10 +9,10 @@ done
 
 trap handle_ctrl_c INT
 function handle_ctrl_c() {
-  docker compose -f "${DIR}/docker-compose.yml" stop
+  docker compose --project-name the-boring-todo-list-1 -f "${DIR}/docker-compose.yml" stop
 }
 
-(docker compose -f "${DIR}/docker-compose.yml" up)&
+(docker compose --project-name the-boring-todo-list-1 -f "${DIR}/docker-compose.yml" up)&
 
 if [[ ! ${ARG_MAP["--skip-app"]} ]]; then
   go install github.com/joho/godotenv/cmd/godotenv@latest
