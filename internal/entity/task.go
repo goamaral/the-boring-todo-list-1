@@ -9,6 +9,6 @@ import (
 type Task struct {
 	gorm_provider.EntityWithUUID
 
-	Title       string     `json:"title"`
-	CompletedAt *time.Time `json:"completedAt"`
+	Title  string     `json:"title"`
+	DoneAt *time.Time `json:"doneAt"`
 }

@@ -75,7 +75,7 @@ CREATE TABLE public.tasks (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     title character varying(255) NOT NULL,
-    completed_at timestamp without time zone
+    done_at timestamp without time zone
 );
 
 
