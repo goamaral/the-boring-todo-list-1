@@ -8,7 +8,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/oklog/ulid/v2"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -61,7 +60,7 @@ func TestTask_ListTasks(t *testing.T) {
 	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 	taskRepo.Mock.Test(nil)
 	taskRepo.EXPECT().
-		Find(mock.Anything, repository.TaskFilter{IDGt: lo.ToPtr(uint(0))}, repository.TaskFilter{}).
+		Find(mock.Anything, repository.TaskFilter{IDGt: gorm_provider.NewQueryFieldFilter(uint(0))}, repository.TaskFilter{}).
 		Return([]entity.Task{{EntityWithUUID: gorm_provider.EntityWithUUID{UUID: uuid}}}, nil)
 
 	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
@@ -81,7 +80,7 @@ func TestTask_GetTask(t *testing.T) {
 		taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 		taskRepo.Mock.Test(nil)
 		taskRepo.EXPECT().
-			First(mock.Anything, repository.TaskFilter{UUID: &task.UUID}).
+			First(mock.Anything, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(task.UUID)}).
 			Return(task, true, nil)
 
 		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
@@ -99,7 +98,7 @@ func TestTask_GetTask(t *testing.T) {
 		taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 		taskRepo.Mock.Test(nil)
 		taskRepo.EXPECT().
-			First(mock.Anything, repository.TaskFilter{UUID: &uuid}).
+			First(mock.Anything, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(uuid)}).
 			Return(entity.Task{}, false, nil)
 
 		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
@@ -109,48 +108,22 @@ func TestTask_GetTask(t *testing.T) {
 	})
 }
 
-func TestTask_UpdateTask(t *testing.T) {
-	uuid := ulid.Make().String()
-	title := "updated title"
-	completedAt := time.Now().UTC()
-	reqBody := server.UpdateTaskRequest{
-		Task: entity.Task{
-			Title:       title,
-			CompletedAt: &completedAt,
-		},
-	}
-
-	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
-	taskRepo.Mock.Test(nil)
-	taskRepo.EXPECT().
-		Update(mock.Anything,
-			&entity.Task{
-				EntityWithUUID: gorm_provider.EntityWithUUID{UUID: uuid},
-				Title:          title,
-				CompletedAt:    &completedAt,
-			},
-			repository.TaskFilter{UUID: &uuid},
-		).Return(nil)
-
-	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-	s.TaskController.TaskRepo = taskRepo
-
-	testRequest[string](t, s, fiber.MethodPut, fmt.Sprintf("/tasks/%s", uuid), buildReqBodyReader(t, reqBody)).
-		Test(fiber.StatusOK, nil)
-}
-
 func TestTask_PatchTask(t *testing.T) {
 	uuid := ulid.Make().String()
 	title := "updated title"
-	reqBody := server.PatchTaskRequest{
-		Patch: repository.TaskPatch{Title: lo.ToPtr(title)},
+	doneAt := time.Date(2023, 9, 24, 12, 11, 0, 0, time.UTC)
+	patch := repository.TaskPatch{
+		Title:  gorm_provider.NewQueryFieldFilter(title),
+		DoneAt: gorm_provider.NewQueryFieldFilter(&doneAt),
 	}
+
+	reqBody := server.PatchTaskRequest{Patch: patch}
 	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 	taskRepo.Mock.Test(nil)
 	taskRepo.EXPECT().
 		Update(mock.Anything,
-			&repository.TaskPatch{Title: lo.ToPtr(title)},
-			repository.TaskFilter{UUID: &uuid},
+			patch,
+			repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(uuid)},
 		).Return(nil)
 
 	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
@@ -165,7 +138,7 @@ func TestTask_DeleteTask(t *testing.T) {
 	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 	taskRepo.Mock.Test(nil)
 	taskRepo.EXPECT().
-		Delete(mock.Anything, repository.TaskFilter{UUID: &uuid}).Return(nil)
+		Delete(mock.Anything, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(uuid)}).Return(nil)
 
 	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
 	s.TaskController.TaskRepo = taskRepo

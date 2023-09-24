@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/samber/lo"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -27,7 +26,6 @@ func newTaskController(baseRouter fiber.Router, gormProvider gorm_provider.Abstr
 	router.Post("/", ctrl.CreateTask)
 	router.Get("/", ctrl.ListTasks)
 	router.Get("/:uuid", ctrl.GetTask)
-	router.Put("/:uuid", ctrl.UpdateTask)
 	router.Patch("/:uuid", ctrl.PatchTask)
 	router.Delete("/:uuid", ctrl.DeleteTask)
 
@@ -69,7 +67,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 
 type ListTasksRequest struct {
 	PaginationToken string `json:"paginationToken"`
-	IsComplete      *bool  `json:"isComplete"`
+	Done            bool   `json:"done"`
 }
 type ListTasksResponse struct {
 	Tasks []entity.Task `json:"tasks"`
@@ -92,7 +90,7 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// Get last task fetched
 	var lastId uint = 0
 	if req.PaginationToken != "" {
-		task, err := tc.TaskRepo.FindOne(c.Context(), repository.TaskFilter{UUID: &req.PaginationToken})
+		task, err := tc.TaskRepo.FindOne(c.Context(), repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(req.PaginationToken)})
 		if err != nil {
 			return err
 		}
@@ -102,8 +100,8 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// List tasks
 	tasks, err := tc.TaskRepo.Find(
 		c.Context(),
-		repository.TaskFilter{IDGt: &lastId},
-		repository.TaskFilter{IsComplete: req.IsComplete},
+		repository.TaskFilter{IDGt: gorm_provider.NewQueryFieldFilter(lastId)},
+		repository.TaskFilter{Done: gorm_provider.NewQueryFieldFilter(req.Done)},
 	)
 	if err != nil {
 		return err
@@ -118,7 +116,7 @@ type GetTaskResponse struct {
 
 func (tc *taskController) GetTask(c *fiber.Ctx) error {
 	// Get task
-	task, found, err := tc.TaskRepo.First(c.Context(), repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
+	task, found, err := tc.TaskRepo.First(c.Context(), repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(c.Params("uuid"))})
 	if err != nil {
 		return err
 	}
@@ -127,28 +125,6 @@ func (tc *taskController) GetTask(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(GetTaskResponse{Task: task})
-}
-
-type UpdateTaskRequest struct {
-	Task entity.Task `json:"task"`
-}
-
-func (tc *taskController) UpdateTask(c *fiber.Ctx) error {
-	// Parse request
-	req := UpdateTaskRequest{}
-	err := c.BodyParser(&req)
-	if err != nil {
-		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
-	}
-	req.Task.UUID = c.Params("uuid")
-
-	// Update task
-	err = tc.TaskRepo.Update(c.Context(), &req.Task, repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
-	if err != nil {
-		return err
-	}
-
-	return c.SendStatus(fiber.StatusOK)
 }
 
 type PatchTaskRequest struct {
@@ -164,7 +140,7 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 	}
 
 	// Patch task
-	err = tc.TaskRepo.Update(c.Context(), &req.Patch, repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
+	err = tc.TaskRepo.Update(c.Context(), req.Patch, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(c.Params("uuid"))})
 	if err != nil {
 		return err
 	}
@@ -174,7 +150,7 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 
 func (tc *taskController) DeleteTask(c *fiber.Ctx) error {
 	// Delete task
-	err := tc.TaskRepo.Delete(c.Context(), repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
+	err := tc.TaskRepo.Delete(c.Context(), repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(c.Params("uuid"))})
 	if err != nil {
 		return err
 	}

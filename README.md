@@ -11,12 +11,20 @@ With it I am able to try and implement new technologies in a simple format.
   - [X] Backend
   - [ ] Frontend
 - [ ] Get task
-  - [ ] Backend
+  - [X] Backend
   - [ ] Frontend
-- [ ] Update task
+- [ ] Update task title
+  - [X] Backend
+  - [ ] Frontend
 - [ ] Delete task
+  - [X] Backend
+  - [ ] Frontend
 - [ ] Toggle done state
+  - [X] Backend
+  - [ ] Frontend
 - [ ] Add search state filter
+  - [X] Backend
+  - [ ] Frontend
 - [ ] Add authentication
 - [ ] Add author to task
 - [ ] Add search author filter
