@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"example.com/the-boring-to-do-list-1/internal/server"
+	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -66,7 +67,7 @@ func testRequest[T any](t *testing.T, s server.Server, method string, route stri
 
 func TestServer_HealthCheck(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
-		s := server.NewServer(nil, nil, nil)
+		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
 
 		testRequest[string](t, s, fiber.MethodGet, "/health", nil).
 			Test(fiber.StatusOK, func(resBody string) {

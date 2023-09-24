@@ -11,18 +11,15 @@ import (
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/internal/server"
-	"example.com/the-boring-to-do-list-1/mocks"
-	"example.com/the-boring-to-do-list-1/pkg/gormprovider"
-	"example.com/the-boring-to-do-list-1/pkg/jwtprovider"
+	"example.com/the-boring-to-do-list-1/internal/test"
+	mock_repository "example.com/the-boring-to-do-list-1/mocks/repository"
+	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
+	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
-func NewUserReposiotry(t *testing.T) *mocks.UserRepository {
-	userRepo := mocks.NewUserRepository(t)
-	userRepo.Mock.Test(nil)
-	return userRepo
-}
-
 func TestAuth_Login(t *testing.T) {
+	test.LoadEnv(t)
+
 	username := "username"
 	password := "password"
 
@@ -30,13 +27,15 @@ func TestAuth_Login(t *testing.T) {
 		user := entity.User{Username: username}
 		require.NoError(t, user.SetEncryptedPassword(password))
 
-		jwtProvider := jwtprovider.NewTestProvider(t)
-
-		userRepo := NewUserReposiotry(t)
-		userRepo.On("Get", mock.Anything, repository.UserFilter{Username: &username}, gormprovider.SelectOption("id", "username")).
+		userRepo := mock_repository.NewAbstractUserRepository(t)
+		userRepo.Mock.Test(nil)
+		userRepo.EXPECT().
+			First(mock.Anything, repository.UserFilter{Username: &username}, gorm_provider.SelectOption("id", "username")).
 			Return(user, true, nil)
 
-		s := server.NewServer(jwtProvider, nil, userRepo)
+		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
+		s.AuthController.UserRepo = userRepo
+
 		reqBody := server.LoginRequest{Username: username, Password: password}
 		testRequest[server.LoginResponse](t, s, fiber.MethodPost, "/auth/login", buildReqBodyReader(t, reqBody)).
 			Test(fiber.StatusOK, func(resBody server.LoginResponse) {

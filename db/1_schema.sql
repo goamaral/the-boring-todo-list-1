@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.4 (Debian 14.4-1.pgdg110+1)
--- Dumped by pg_dump version 15.2
+-- Dumped from database version 14.9 (Debian 14.9-1.pgdg120+1)
+-- Dumped by pg_dump version 16.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -56,7 +56,7 @@ CREATE SEQUENCE public.goose_db_version_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.goose_db_version_id_seq OWNER TO boring;
+ALTER SEQUENCE public.goose_db_version_id_seq OWNER TO boring;
 
 --
 -- Name: goose_db_version_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: boring
@@ -70,7 +70,8 @@ ALTER SEQUENCE public.goose_db_version_id_seq OWNED BY public.goose_db_version.i
 --
 
 CREATE TABLE public.tasks (
-    id character(26) NOT NULL,
+    id integer NOT NULL,
+    uuid character(26) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     title character varying(255) NOT NULL,
@@ -81,11 +82,34 @@ CREATE TABLE public.tasks (
 ALTER TABLE public.tasks OWNER TO boring;
 
 --
+-- Name: tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: boring
+--
+
+CREATE SEQUENCE public.tasks_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.tasks_id_seq OWNER TO boring;
+
+--
+-- Name: tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: boring
+--
+
+ALTER SEQUENCE public.tasks_id_seq OWNED BY public.tasks.id;
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: boring
 --
 
 CREATE TABLE public.users (
-    id character(26) NOT NULL,
+    id integer NOT NULL,
+    uuid character(26) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     username character varying(255) NOT NULL,
@@ -96,10 +120,46 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO boring;
 
 --
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: boring
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO boring;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: boring
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
 -- Name: goose_db_version id; Type: DEFAULT; Schema: public; Owner: boring
 --
 
 ALTER TABLE ONLY public.goose_db_version ALTER COLUMN id SET DEFAULT nextval('public.goose_db_version_id_seq'::regclass);
+
+
+--
+-- Name: tasks id; Type: DEFAULT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval('public.tasks_id_seq'::regclass);
+
+
+--
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
@@ -119,6 +179,14 @@ ALTER TABLE ONLY public.tasks
 
 
 --
+-- Name: tasks tasks_uuid_key; Type: CONSTRAINT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_uuid_key UNIQUE (uuid);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: boring
 --
 
@@ -132,6 +200,14 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
+-- Name: users users_uuid_key; Type: CONSTRAINT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_uuid_key UNIQUE (uuid);
 
 
 --

@@ -19,5 +19,5 @@ if [[ ! ${ARG_MAP["--skip-app"]} ]]; then
   go install github.com/cosmtrek/air@latest
   godotenv air -build.cmd "go build -o tmp/main ./cmd/app"
 else
-  sleep infinity
+  while true; do sleep 1000; done
 fi

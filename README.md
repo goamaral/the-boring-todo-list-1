@@ -20,6 +20,7 @@ With it I am able to try and implement new technologies in a simple format.
 - [ ] Add authentication
 - [ ] Add author to task
 - [ ] Add search author filter
+- [ ] Stop internal errors from propagating to the responses
 - [ ] Implement end to end tests
 
 ## Technologies

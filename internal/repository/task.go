@@ -2,21 +2,21 @@ package repository
 
 import (
 	"example.com/the-boring-to-do-list-1/internal/entity"
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
+	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 )
+
+type AbstractTaskRepository interface {
+	gorm_provider.AbstractRepository[entity.Task]
+}
 
 const (
 	tasksTableName = "tasks"
 )
 
-type taskRepository struct {
-	gormprovider.AbstractRepository[entity.Task]
+type TaskRepository struct {
+	gorm_provider.Repository[entity.Task]
 }
 
-type TaskRepository interface {
-	gormprovider.Repository[entity.Task]
-}
-
-func NewTaskRepository(gormProvider *gormprovider.Provider) TaskRepository {
-	return &taskRepository{AbstractRepository: gormprovider.NewAbstractRepository[entity.Task](gormProvider, tasksTableName, "id")}
+func NewTaskRepository(gormProvider gorm_provider.AbstractProvider) TaskRepository {
+	return TaskRepository{Repository: gorm_provider.NewRepository[entity.Task](gormProvider, tasksTableName)}
 }
