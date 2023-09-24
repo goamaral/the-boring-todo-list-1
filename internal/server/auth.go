@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"example.com/the-boring-to-do-list-1/internal/repository"
-	"example.com/the-boring-to-do-list-1/pkg/gormprovider"
-	"example.com/the-boring-to-do-list-1/pkg/jwtprovider"
+	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
+	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -17,16 +17,18 @@ var ErrAuthorizationHeader = errors.New("authorization header is missing/invalid
 var ErrInvalidCredentials = errors.New("invalid credentials")
 
 type authController struct {
-	absctractController
-	jwtProvider *jwtprovider.Provider
-	userRepo    repository.UserRepository
+	controller
+	id          int
+	jwtProvider jwt_provider.Provider
+	UserRepo    repository.AbstractUserRepository
 }
 
-func newAuthController(baseRouter fiber.Router, jwtProvider *jwtprovider.Provider, userRepo repository.UserRepository) *authController {
+func newAuthController(baseRouter fiber.Router, jwtProvider jwt_provider.Provider, gorm_provider gorm_provider.AbstractProvider) *authController {
 	ctrl := &authController{
-		absctractController: newAbstractController(),
-		jwtProvider:         jwtProvider,
-		userRepo:            userRepo,
+		controller:  newController(),
+		id:          1,
+		jwtProvider: jwtProvider,
+		UserRepo:    repository.NewUserRepository(gorm_provider),
 	}
 
 	router := baseRouter.Group("/auth")
@@ -44,7 +46,7 @@ type LoginResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func (ct authController) Login(c *fiber.Ctx) error {
+func (ct *authController) Login(c *fiber.Ctx) error {
 	// Parse request
 	req := LoginRequest{}
 	err := c.BodyParser(&req)
@@ -59,7 +61,11 @@ func (ct authController) Login(c *fiber.Ctx) error {
 	}
 
 	// Get user password
-	user, found, err := ct.userRepo.Get(c.Context(), repository.UserFilter{Username: &req.Username}, gormprovider.SelectOption("id", "username"))
+	user, found, err := ct.UserRepo.First(
+		c.Context(),
+		repository.UserFilter{Username: &req.Username},
+		gorm_provider.SelectOption("id", "username"),
+	)
 	if err != nil {
 		return err
 	}
@@ -78,7 +84,7 @@ func (ct authController) Login(c *fiber.Ctx) error {
 
 	// Generate JWT access token
 	accessToken, err := ct.jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.Id,
+		Subject:   user.UUID,
 		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(15 * time.Minute)},
 	})
 	if err != nil {
@@ -87,7 +93,7 @@ func (ct authController) Login(c *fiber.Ctx) error {
 
 	// Generate JWT refresh token
 	refreshToken, err := ct.jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   "",
+		Subject:   user.UUID,
 		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(24 * time.Hour)},
 	})
 	if err != nil {
@@ -109,12 +115,12 @@ func (ac authController) JWTAuthMiddleware(c *fiber.Ctx) error {
 		return sendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
 	}
 
-	userId, err := claims.GetSubject()
+	userUUID, err := claims.GetSubject()
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
 	}
 
-	c.Locals("userId", userId)
+	c.Locals("userUUID", userUUID)
 
 	return c.Next()
 }

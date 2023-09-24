@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
-set -eo pipefail
+SCRIPT_PATH="$(cd "$(dirname "$0")" > /dev/null 2>&1; pwd -P)"
+PROJECT_PATH=$SCRIPT_PATH/..
 
 go install github.com/vektra/mockery/v2@latest
-rm -R mocks
-mockery --all --case underscore
+rm -R $PROJECT_PATH/mocks
+
+# INTERNAL #
+mockery --all --case underscore --packageprefix mock_ --keeptree --with-expecter \
+  --dir $PROJECT_PATH/internal/$FOLDER_PATH \
+  --output $PROJECT_PATH/mocks/$FOLDER_PATH
+
+# PKG #
+rm -r ./pkg/gorm_provider/mocks
+mockery --all --case underscore --packageprefix mock_ --keeptree --with-expecter \
+  --dir $PROJECT_PATH/pkg/gorm_provider --output $PROJECT_PATH/pkg/gorm_provider/mocks

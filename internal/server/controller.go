@@ -9,12 +9,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-type absctractController struct {
+type controller struct {
 	validate *validator.Validate
 }
 
-func newAbstractController() absctractController {
-	return absctractController{
+func newController() controller {
+	return controller{
 		validate: validator.New(),
 	}
 }
@@ -37,11 +37,11 @@ func sendDefaultStatusResponse(c *fiber.Ctx, status int) error {
 }
 
 type CreateResponse struct {
-	Id string `json:"id"`
+	UUID string `json:"uuid"`
 }
 
-func sendCreatedResponse(c *fiber.Ctx, id string) error {
-	return c.Status(fiber.StatusCreated).JSON(CreateResponse{Id: id})
+func sendCreatedResponse(c *fiber.Ctx, uuid string) error {
+	return c.Status(fiber.StatusCreated).JSON(CreateResponse{UUID: uuid})
 }
 
 /* ERRORS */

@@ -2,21 +2,21 @@ package repository
 
 import (
 	"example.com/the-boring-to-do-list-1/internal/entity"
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
+	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 )
+
+type AbstractUserRepository interface {
+	gorm_provider.AbstractRepository[entity.User]
+}
 
 const (
 	usersTableName = "users"
 )
 
-type UserRepository interface {
-	gormprovider.Repository[entity.User]
+type UserRepository struct {
+	gorm_provider.Repository[entity.User]
 }
 
-func NewUserRepository(gormProvider *gormprovider.Provider) UserRepository {
-	return &userRepository{AbstractRepository: gormprovider.NewAbstractRepository[entity.User](gormProvider, usersTableName, "id")}
-}
-
-type userRepository struct {
-	gormprovider.AbstractRepository[entity.User]
+func NewUserRepository(gormProvider gorm_provider.AbstractProvider) UserRepository {
+	return UserRepository{Repository: gorm_provider.NewRepository[entity.User](gormProvider, usersTableName)}
 }

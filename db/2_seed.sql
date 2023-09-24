@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.4 (Debian 14.4-1.pgdg110+1)
--- Dumped by pg_dump version 15.2
+-- Dumped from database version 14.9 (Debian 14.9-1.pgdg120+1)
+-- Dumped by pg_dump version 16.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -21,15 +21,15 @@ SET row_security = off;
 --
 
 INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (1, 0, true, '2023-03-06 00:52:32.44439');
-INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (4, 1, true, '2023-05-28 20:50:40.714345');
-INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (6, 2, true, '2023-05-28 20:55:39.297667');
+INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (7, 1, true, '2023-09-23 23:33:47.591422');
+INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (8, 2, true, '2023-09-23 23:33:47.622758');
 
 
 --
 -- Name: goose_db_version_id_seq; Type: SEQUENCE SET; Schema: public; Owner: boring
 --
 
-SELECT pg_catalog.setval('public.goose_db_version_id_seq', 6, true);
+SELECT pg_catalog.setval('public.goose_db_version_id_seq', 8, true);
 
 
 --

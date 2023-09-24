@@ -5,35 +5,35 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/samber/lo"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
+	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 )
 
 type taskController struct {
-	absctractController
-	taskRepo repository.TaskRepository
+	controller
+	TaskRepo repository.AbstractTaskRepository
 }
 
-func newTaskController(baseRouter fiber.Router, taskRepo repository.TaskRepository) *taskController {
+func newTaskController(baseRouter fiber.Router, gormProvider gorm_provider.AbstractProvider) *taskController {
 	ctrl := &taskController{
-		absctractController: newAbstractController(),
-		taskRepo:            taskRepo,
+		controller: newController(),
+		TaskRepo:   repository.NewTaskRepository(gormProvider),
 	}
 
 	router := baseRouter.Group("/tasks")
 	router.Post("/", ctrl.CreateTask)
 	router.Get("/", ctrl.ListTasks)
-	router.Get("/:id", ctrl.GetTask)
-	router.Put("/:id", ctrl.UpdateTask)
-	router.Patch("/:id", ctrl.PatchTask)
-	router.Delete("/:id", ctrl.DeleteTask)
+	router.Get("/:uuid", ctrl.GetTask)
+	router.Put("/:uuid", ctrl.UpdateTask)
+	router.Patch("/:uuid", ctrl.PatchTask)
+	router.Delete("/:uuid", ctrl.DeleteTask)
 
 	return ctrl
 }
 
-/* PUBLIC */
 type NewTask struct {
 	Title string `json:"title" validate:"required"`
 }
@@ -41,7 +41,7 @@ type CreateTaskRequest struct {
 	Task NewTask `json:"task" validate:"required"`
 }
 
-func (tc taskController) CreateTask(c *fiber.Ctx) error {
+func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	// Parse request
 	req := CreateTaskRequest{}
 	err := c.BodyParser(&req)
@@ -59,24 +59,23 @@ func (tc taskController) CreateTask(c *fiber.Ctx) error {
 	task := entity.Task{
 		Title: req.Task.Title,
 	}
-	err = tc.taskRepo.Create(c.Context(), &task)
+	err = tc.TaskRepo.Create(c.Context(), &task)
 	if err != nil {
 		return err
 	}
 
-	return sendCreatedResponse(c, task.Id)
+	return sendCreatedResponse(c, task.UUID)
 }
 
 type ListTasksRequest struct {
-	PageId     string `json:"pageId"`
-	PageSize   int    `json:"pageSize" validate:"gte=0,lte=10"`
-	IsComplete *bool  `json:"isComplete"`
+	PaginationToken string `json:"paginationToken"`
+	IsComplete      *bool  `json:"isComplete"`
 }
 type ListTasksResponse struct {
 	Tasks []entity.Task `json:"tasks"`
 }
 
-func (tc taskController) ListTasks(c *fiber.Ctx) error {
+func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// Parse request
 	req := ListTasksRequest{}
 	err := c.BodyParser(&req)
@@ -90,10 +89,20 @@ func (tc taskController) ListTasks(c *fiber.Ctx) error {
 		return sendValidationErrorsResponse(c, err.(validator.ValidationErrors))
 	}
 
+	// Get last task fetched
+	var lastId uint = 0
+	if req.PaginationToken != "" {
+		task, err := tc.TaskRepo.FindOne(c.Context(), repository.TaskFilter{UUID: &req.PaginationToken})
+		if err != nil {
+			return err
+		}
+		lastId = task.ID
+	}
+
 	// List tasks
-	tasks, err := tc.taskRepo.List(
+	tasks, err := tc.TaskRepo.Find(
 		c.Context(),
-		gormprovider.PaginationOption{PageId: req.PageId, PageSize: req.PageSize},
+		repository.TaskFilter{IDGt: &lastId},
 		repository.TaskFilter{IsComplete: req.IsComplete},
 	)
 	if err != nil {
@@ -107,9 +116,9 @@ type GetTaskResponse struct {
 	Task entity.Task `json:"task"`
 }
 
-func (tc taskController) GetTask(c *fiber.Ctx) error {
+func (tc *taskController) GetTask(c *fiber.Ctx) error {
 	// Get task
-	task, found, err := tc.taskRepo.Get(c.Context(), repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
+	task, found, err := tc.TaskRepo.First(c.Context(), repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
 	if err != nil {
 		return err
 	}
@@ -124,17 +133,17 @@ type UpdateTaskRequest struct {
 	Task entity.Task `json:"task"`
 }
 
-func (tc taskController) UpdateTask(c *fiber.Ctx) error {
+func (tc *taskController) UpdateTask(c *fiber.Ctx) error {
 	// Parse request
 	req := UpdateTaskRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
-	req.Task.AbstractEntity.Id = c.Params("id")
+	req.Task.UUID = c.Params("uuid")
 
 	// Update task
-	err = tc.taskRepo.Update(c.Context(), &req.Task, repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
+	err = tc.TaskRepo.Update(c.Context(), &req.Task, repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
 	if err != nil {
 		return err
 	}
@@ -143,20 +152,19 @@ func (tc taskController) UpdateTask(c *fiber.Ctx) error {
 }
 
 type PatchTaskRequest struct {
-	Task entity.Task `json:"task"`
+	Patch repository.TaskPatch `json:"patch"`
 }
 
-func (tc taskController) PatchTask(c *fiber.Ctx) error {
+func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 	// Parse request
 	req := PatchTaskRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
 		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
-	req.Task.AbstractEntity.Id = c.Params("id")
 
 	// Patch task
-	err = tc.taskRepo.Patch(c.Context(), &req.Task, repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
+	err = tc.TaskRepo.Update(c.Context(), &req.Patch, repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
 	if err != nil {
 		return err
 	}
@@ -164,9 +172,9 @@ func (tc taskController) PatchTask(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-func (tc taskController) DeleteTask(c *fiber.Ctx) error {
+func (tc *taskController) DeleteTask(c *fiber.Ctx) error {
 	// Delete task
-	err := tc.taskRepo.Delete(c.Context(), repository.TaskFilter{Id: gormprovider.OptionalValue(c.Params("id"))})
+	err := tc.TaskRepo.Delete(c.Context(), repository.TaskFilter{UUID: lo.ToPtr(c.Params("uuid"))})
 	if err != nil {
 		return err
 	}

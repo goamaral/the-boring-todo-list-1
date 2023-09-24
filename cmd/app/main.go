@@ -5,10 +5,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/internal/server"
-	"example.com/the-boring-to-do-list-1/pkg/gormprovider"
-	"example.com/the-boring-to-do-list-1/pkg/jwtprovider"
+	gorm_provider_postgres "example.com/the-boring-to-do-list-1/pkg/gorm_provider/postgres"
+	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 
 	/* PROVIDERS */
 	// Gorm
-	gormProvider, err := gormprovider.NewProvider()
+	gorm_provider, err := gorm_provider_postgres.NewProvider(gorm_provider_postgres.NewDSN())
 	if err != nil {
 		panic(err)
 	}
@@ -31,17 +30,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	jwtProvider, err := jwtprovider.NewProvider(privKeyFile, pubKeyFile)
+	jwt_provider, err := jwt_provider.NewProvider(privKeyFile, pubKeyFile)
 	if err != nil {
 		panic(err)
 	}
 
-	// Repositories
-	taskRepo := repository.NewTaskRepository(gormProvider)
-	userRepo := repository.NewUserRepository(gormProvider)
-
 	// HTTP server
-	err = server.NewServer(jwtProvider, taskRepo, userRepo).Run()
+	err = server.NewServer(jwt_provider, gorm_provider).Run()
 	if err != nil {
 		panic(err)
 	}

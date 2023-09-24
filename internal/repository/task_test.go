@@ -2,64 +2,38 @@ package repository_test
 
 import (
 	"context"
-	"os"
-	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
-	"github.com/joho/godotenv"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
+	"example.com/the-boring-to-do-list-1/internal/test"
 )
 
-func NewTaskRepository(t *testing.T) repository.TaskRepository {
-	_, b, _, _ := runtime.Caller(0)
-	folderPath := filepath.Dir(b)
-	if err := godotenv.Load(folderPath + "/../../secrets/.env"); err != nil {
-		t.Error(err)
-	}
-
-	schema, err := os.Open(folderPath + "/../../db/1_schema.sql")
-	if err != nil {
-		t.Error(err)
-	}
-
-	seed, err := os.Open(folderPath + "/../../db/2_seed.sql")
-	if err != nil {
-		t.Error(err)
-	}
-
-	gormProvider := gormprovider.NewTestProvider(t, schema, seed)
-	return repository.NewTaskRepository(gormProvider)
-}
-
-func AddTask(t *testing.T, repo gormprovider.Repository[entity.Task], task *entity.Task) *entity.Task {
-	if err := repo.Create(context.Background(), task); err != nil {
-		t.Error(err)
-	}
+func AddTask(t *testing.T, repo repository.TaskRepository, task *entity.Task) *entity.Task {
+	require.NoError(t, repo.Create(context.Background(), task))
 	return task
 }
 
 func TestTaskRepository_TaskFilter(t *testing.T) {
-	repo := NewTaskRepository(t)
+	repo := repository.NewTaskRepository(test.NewTestProvider(t))
 	taskA := AddTask(t, repo, &entity.Task{})
-	taskB := AddTask(t, repo, &entity.Task{CompletedAt: gormprovider.OptionalValue(time.Now())})
+	taskB := AddTask(t, repo, &entity.Task{CompletedAt: lo.ToPtr(time.Now())})
 
 	type Test struct {
 		TaskFilter  repository.TaskFilter
-		ExpectedIds []string
+		ExpectedIds []uint
 	}
 	runTest := func(test Test) func(t *testing.T) {
 		return func(t *testing.T) {
-			tasks, err := repo.List(context.Background(), test.TaskFilter)
+			tasks, err := repo.Find(context.Background(), test.TaskFilter)
 			require.NoError(t, err)
 			for i, expectedTaskId := range test.ExpectedIds {
-				assert.Equal(t, expectedTaskId, tasks[i].Id)
+				assert.Equal(t, expectedTaskId, tasks[i].ID)
 			}
 			assert.GreaterOrEqual(t, len(tasks), len(test.ExpectedIds))
 		}
@@ -67,16 +41,21 @@ func TestTaskRepository_TaskFilter(t *testing.T) {
 
 	t.Run("Blank", runTest(Test{
 		TaskFilter:  repository.TaskFilter{},
-		ExpectedIds: []string{taskA.Id, taskB.Id},
+		ExpectedIds: []uint{taskA.ID, taskB.ID},
 	}))
 
-	t.Run("Id", runTest(Test{
-		TaskFilter:  repository.TaskFilter{Id: &taskA.Id},
-		ExpectedIds: []string{taskA.Id},
+	t.Run("UUID", runTest(Test{
+		TaskFilter:  repository.TaskFilter{UUID: &taskA.UUID},
+		ExpectedIds: []uint{taskA.ID},
+	}))
+
+	t.Run("IDGt", runTest(Test{
+		TaskFilter:  repository.TaskFilter{IDGt: &taskA.ID},
+		ExpectedIds: []uint{taskB.ID},
 	}))
 
 	t.Run("IsComplete", runTest(Test{
-		TaskFilter:  repository.TaskFilter{IsComplete: gormprovider.OptionalValue(true)},
-		ExpectedIds: []string{taskB.Id},
+		TaskFilter:  repository.TaskFilter{IsComplete: lo.ToPtr(true)},
+		ExpectedIds: []uint{taskB.ID},
 	}))
 }

@@ -3,14 +3,14 @@ package entity
 import (
 	"errors"
 
-	gormprovider "example.com/the-boring-to-do-list-1/pkg/gormprovider"
+	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const userPasswordBcryptCost = 14
 
 type User struct {
-	gormprovider.AbstractEntity
+	gorm_provider.EntityWithUUID
 
 	Username          string `json:"username"`
 	EncryptedPassword []byte `json:"encryptedPassword"`

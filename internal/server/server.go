@@ -8,22 +8,18 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
-	"example.com/the-boring-to-do-list-1/internal/repository"
-	"example.com/the-boring-to-do-list-1/pkg/jwtprovider"
+	"example.com/the-boring-to-do-list-1/pkg/env"
+	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
+	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
-type server struct {
+type Server struct {
 	fiberApp       *fiber.App
-	authController *authController
-	taskController *taskController
+	AuthController *authController
+	TaskController *taskController
 }
 
-type Server interface {
-	Run() error
-	Test(req *http.Request) (resp *http.Response, err error)
-}
-
-func NewServer(jwtProvider *jwtprovider.Provider, taskRepo repository.TaskRepository, userRepo repository.UserRepository) *server {
+func NewServer(jwt_provider jwt_provider.Provider, gorm_provider gorm_provider.AbstractProvider) Server {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// TODO: Add logger
@@ -32,25 +28,24 @@ func NewServer(jwtProvider *jwtprovider.Provider, taskRepo repository.TaskReposi
 		},
 	})
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
-	fiberApp.Use(recover.New())
+	if env.GetOrDefault("ENV", "production") != "test" {
+		fiberApp.Use(recover.New())
+	}
 	fiberApp.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
 
-	s := &server{
+	return Server{
 		fiberApp:       fiberApp,
-		authController: newAuthController(fiberApp, jwtProvider, userRepo),
-		taskController: newTaskController(fiberApp, taskRepo),
+		AuthController: newAuthController(fiberApp, jwt_provider, gorm_provider),
+		TaskController: newTaskController(fiberApp, gorm_provider),
 	}
-
-	return s
 }
 
-/* PUBLIC */
-func (s server) Run() error {
+func (s Server) Run() error {
 	return s.fiberApp.Listen("0.0.0.0:3000")
 }
 
-func (s server) Test(req *http.Request) (*http.Response, error) {
+func (s Server) Test(req *http.Request) (*http.Response, error) {
 	return s.fiberApp.Test(req, -1)
 }
