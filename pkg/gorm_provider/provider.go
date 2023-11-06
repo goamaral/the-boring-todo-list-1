@@ -13,7 +13,7 @@ import (
 )
 
 type AbstractProvider interface {
-	GetDBFromContext(ctx context.Context) *gorm.DB
+	GetDb() *gorm.DB
 	NewTransaction(ctx context.Context, fc func(context.Context) error) error
 }
 
@@ -29,11 +29,15 @@ func NewProvider(dialector gorm.Dialector) (Provider, error) {
 	return Provider{DB: db}, nil
 }
 
-func (p Provider) GetDBFromContext(ctx context.Context) *gorm.DB {
+func GetDbFromContextOr(ctx context.Context, db *gorm.DB) *gorm.DB {
 	ctxWithTx, ok := ctx.(TxContext)
 	if ok && ctxWithTx.Tx != nil {
 		return ctxWithTx.Tx
 	}
+	return db
+}
+
+func (p Provider) GetDb() *gorm.DB {
 	return p.DB
 }
 
@@ -43,7 +47,7 @@ type TxContext struct {
 }
 
 func (p Provider) NewTransaction(ctx context.Context, fc func(context.Context) error) error {
-	tx := p.GetDBFromContext(ctx).Begin()
+	tx := GetDbFromContextOr(ctx, p.DB).Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -52,6 +56,7 @@ func (p Provider) NewTransaction(ctx context.Context, fc func(context.Context) e
 	})
 }
 
+/* TESTING */
 func NewTestProvider(t *testing.T, schema io.Reader, seed io.Reader, dialectorOpenFn func(string) gorm.Dialector, dsn DSN) Provider {
 	dialector := dialectorOpenFn(dsn.String())
 	testDsn := dsn

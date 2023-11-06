@@ -1,13 +1,20 @@
 package gorm_provider
 
 import (
+	"database/sql/driver"
 	"errors"
+	"fmt"
+	"reflect"
 
 	"gorm.io/gorm"
 )
 
 type Query[T AbstractEntity] struct {
 	DB *gorm.DB
+}
+
+func (q Query[T]) Debug() Query[T] {
+	return Query[T]{DB: q.DB.Debug()}
 }
 
 func (q Query[T]) Create(record *T) error {
@@ -58,11 +65,63 @@ func (q Query[T]) First() (T, bool, error) {
 	return record, true, nil
 }
 
+// Update can be a struct or a map. If struct, it will be converted to a map
+// Optional fields should implement AbstractOptionalField interface
 func (q Query[T]) Update(update any) error {
-	return q.DB.Updates(update).Error
+	updateMap := map[string]any{}
+
+	kind := reflect.Indirect(reflect.ValueOf(update)).Type().Kind()
+	if kind == reflect.Struct {
+		var err error
+		updateMap, err = structToMap(q.DB.Statement, update)
+		if err != nil {
+			return fmt.Errorf("failed to convert to map: %w", err)
+		}
+	} else if kind != reflect.Map {
+		return fmt.Errorf("update must be a map")
+	}
+
+	var record T
+	return q.DB.Model(&record).Updates(updateMap).Error
 }
 
 func (q Query[T]) Delete() error {
 	var record T
 	return q.DB.Delete(&record).Error
+}
+
+func structToMap(stmt *gorm.Statement, record any) (map[string]any, error) {
+	res := map[string]any{}
+	if record == nil {
+		return res, nil
+	}
+
+	reflectType := reflect.TypeOf(record)
+	tableName := stmt.NamingStrategy.TableName(reflectType.Name())
+	reflectValue := reflect.Indirect(reflect.ValueOf(record))
+
+	if reflectType.Kind() == reflect.Ptr {
+		reflectType = reflectType.Elem()
+	}
+	for i := 0; i < reflectType.NumField(); i++ {
+		fieldName := reflectType.Field(i).Name
+		col := stmt.NamingStrategy.ColumnName(tableName, fieldName)
+		field := reflectValue.Field(i).Interface()
+
+		if of, ok := field.(AbstractOptionalField); ok && !of.Defined() {
+			continue
+		}
+
+		if valuer, ok := field.(driver.Valuer); ok {
+			val, err := valuer.Value()
+			if err != nil {
+				return nil, fmt.Errorf("failed to call Value method: %w", err)
+			}
+			res[col] = val
+
+		} else {
+			res[col] = field
+		}
+	}
+	return res, nil
 }

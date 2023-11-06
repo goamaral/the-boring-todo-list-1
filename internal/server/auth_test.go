@@ -7,19 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm/clause"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
-	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/internal/server"
-	"example.com/the-boring-to-do-list-1/internal/test"
 	mock_repository "example.com/the-boring-to-do-list-1/mocks/repository"
 	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
 func TestAuth_Login(t *testing.T) {
-	test.LoadEnv(t)
-
 	username := "username"
 	password := "password"
 
@@ -30,7 +27,11 @@ func TestAuth_Login(t *testing.T) {
 		userRepo := mock_repository.NewAbstractUserRepository(t)
 		userRepo.Mock.Test(nil)
 		userRepo.EXPECT().
-			First(mock.Anything, repository.UserFilter{Username: &username}, gorm_provider.SelectOption("id", "username")).
+			First(
+				mock.Anything,
+				gorm_provider.SelectClause("id", "username"),
+				clause.Eq{Column: "username", Value: username},
+			).
 			Return(user, true, nil)
 
 		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)

@@ -11,19 +11,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm/clause"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/internal/server"
-	"example.com/the-boring-to-do-list-1/internal/test"
 	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 	mock_gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider/mocks"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
 func TestTask_CreateTask(t *testing.T) {
-	test.LoadEnv(t)
-
 	t.Run("Created", func(t *testing.T) {
 		title := "title"
 
@@ -31,7 +29,7 @@ func TestTask_CreateTask(t *testing.T) {
 		taskRepo.Mock.Test(nil)
 		taskRepo.EXPECT().
 			Create(mock.Anything, mock.Anything).
-			RunAndReturn(func(_ context.Context, task *entity.Task, _ ...gorm_provider.QueryOption) error {
+			RunAndReturn(func(_ context.Context, task *entity.Task, _ ...clause.Expression) error {
 				task.UUID = ulid.Make().String()
 				return nil
 			})
@@ -60,7 +58,7 @@ func TestTask_ListTasks(t *testing.T) {
 	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 	taskRepo.Mock.Test(nil)
 	taskRepo.EXPECT().
-		Find(mock.Anything, repository.TaskFilter{IDGt: gorm_provider.NewQueryFieldFilter(uint(0))}, repository.TaskFilter{}).
+		Find(mock.Anything, clause.Gt{Column: "id", Value: uint(0)}, clause.Eq{Column: "done_at", Value: nil}).
 		Return([]entity.Task{{EntityWithUUID: gorm_provider.EntityWithUUID{UUID: uuid}}}, nil)
 
 	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
@@ -80,7 +78,7 @@ func TestTask_GetTask(t *testing.T) {
 		taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 		taskRepo.Mock.Test(nil)
 		taskRepo.EXPECT().
-			First(mock.Anything, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(task.UUID)}).
+			First(mock.Anything, clause.Eq{Column: "uuid", Value: task.UUID}).
 			Return(task, true, nil)
 
 		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
@@ -98,7 +96,7 @@ func TestTask_GetTask(t *testing.T) {
 		taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 		taskRepo.Mock.Test(nil)
 		taskRepo.EXPECT().
-			First(mock.Anything, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(uuid)}).
+			First(mock.Anything, clause.Eq{Column: "uuid", Value: uuid}).
 			Return(entity.Task{}, false, nil)
 
 		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
@@ -113,18 +111,16 @@ func TestTask_PatchTask(t *testing.T) {
 	title := "updated title"
 	doneAt := time.Date(2023, 9, 24, 12, 11, 0, 0, time.UTC)
 	patch := repository.TaskPatch{
-		Title:  gorm_provider.NewQueryFieldFilter(title),
-		DoneAt: gorm_provider.NewQueryFieldFilter(&doneAt),
+		Title:  gorm_provider.NewOptionalField(title),
+		DoneAt: gorm_provider.NewOptionalField(&doneAt),
 	}
 
 	reqBody := server.PatchTaskRequest{Patch: patch}
 	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 	taskRepo.Mock.Test(nil)
 	taskRepo.EXPECT().
-		Update(mock.Anything,
-			patch,
-			repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(uuid)},
-		).Return(nil)
+		Update(mock.Anything, patch, clause.Eq{Column: "uuid", Value: uuid}).
+		Return(nil)
 
 	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
 	s.TaskController.TaskRepo = taskRepo
@@ -138,7 +134,8 @@ func TestTask_DeleteTask(t *testing.T) {
 	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
 	taskRepo.Mock.Test(nil)
 	taskRepo.EXPECT().
-		Delete(mock.Anything, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(uuid)}).Return(nil)
+		Delete(mock.Anything, clause.Eq{Column: "uuid", Value: uuid}).
+		Return(nil)
 
 	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
 	s.TaskController.TaskRepo = taskRepo
