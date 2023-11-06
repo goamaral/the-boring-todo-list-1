@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm/clause"
 )
 
 var ErrAuthorizationHeader = errors.New("authorization header is missing/invalid")
@@ -63,8 +64,8 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 	// Get user password
 	user, found, err := ct.UserRepo.First(
 		c.Context(),
-		repository.UserFilter{Username: &req.Username},
-		gorm_provider.SelectOption("id", "username"),
+		gorm_provider.SelectClause("id", "username"),
+		clause.Eq{Column: "username", Value: req.Username},
 	)
 	if err != nil {
 		return err

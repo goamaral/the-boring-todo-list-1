@@ -18,12 +18,16 @@ func RelativePath(relativePath string) string {
 	return folderPath + "/" + relativePath
 }
 
-func LoadEnv(t *testing.T) {
-	require.NoError(t, godotenv.Load(RelativePath("../../secrets/.env.test")))
+func LoadEnv() error {
+	return godotenv.Load(RelativePath("../../secrets/.env.test"))
+}
+
+func LoadEnvT(t require.TestingT) {
+	require.NoError(t, LoadEnv())
 }
 
 func NewTestProvider(t *testing.T) gorm_provider.Provider {
-	LoadEnv(t)
+	LoadEnvT(t)
 
 	schema, err := os.Open(RelativePath("../../db/1_schema.sql"))
 	require.NoError(t, err)

@@ -7,10 +7,10 @@ rm -R $PROJECT_PATH/mocks
 
 # INTERNAL #
 mockery --all --case underscore --packageprefix mock_ --keeptree --with-expecter \
-  --dir $PROJECT_PATH/internal/$FOLDER_PATH \
-  --output $PROJECT_PATH/mocks/$FOLDER_PATH
+  --dir $PROJECT_PATH/internal \
+  --output $PROJECT_PATH/mocks
 
 # PKG #
-rm -r ./pkg/gorm_provider/mocks
+rm -r $PROJECT_PATH/pkg/gorm_provider/mocks
 mockery --all --case underscore --packageprefix mock_ --keeptree --with-expecter \
   --dir $PROJECT_PATH/pkg/gorm_provider --output $PROJECT_PATH/pkg/gorm_provider/mocks

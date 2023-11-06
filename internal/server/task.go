@@ -5,6 +5,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/samber/lo"
+	"gorm.io/gorm/clause"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
@@ -90,7 +92,7 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// Get last task fetched
 	var lastId uint = 0
 	if req.PaginationToken != "" {
-		task, err := tc.TaskRepo.FindOne(c.Context(), repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(req.PaginationToken)})
+		task, err := tc.TaskRepo.FindOne(c.Context(), clause.Eq{Column: "uuid", Value: req.PaginationToken})
 		if err != nil {
 			return err
 		}
@@ -100,8 +102,8 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// List tasks
 	tasks, err := tc.TaskRepo.Find(
 		c.Context(),
-		repository.TaskFilter{IDGt: gorm_provider.NewQueryFieldFilter(lastId)},
-		repository.TaskFilter{Done: gorm_provider.NewQueryFieldFilter(req.Done)},
+		clause.Gt{Column: "id", Value: lastId},
+		lo.If[clause.Expression](req.Done, clause.Neq{Column: "done_at", Value: nil}).Else(clause.Eq{Column: "done_at", Value: nil}),
 	)
 	if err != nil {
 		return err
@@ -116,7 +118,7 @@ type GetTaskResponse struct {
 
 func (tc *taskController) GetTask(c *fiber.Ctx) error {
 	// Get task
-	task, found, err := tc.TaskRepo.First(c.Context(), repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(c.Params("uuid"))})
+	task, found, err := tc.TaskRepo.First(c.Context(), clause.Eq{Column: "uuid", Value: c.Params("uuid")})
 	if err != nil {
 		return err
 	}
@@ -140,7 +142,7 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 	}
 
 	// Patch task
-	err = tc.TaskRepo.Update(c.Context(), req.Patch, repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(c.Params("uuid"))})
+	err = tc.TaskRepo.Update(c.Context(), req.Patch, clause.Eq{Column: "uuid", Value: c.Params("uuid")})
 	if err != nil {
 		return err
 	}
@@ -150,7 +152,7 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 
 func (tc *taskController) DeleteTask(c *fiber.Ctx) error {
 	// Delete task
-	err := tc.TaskRepo.Delete(c.Context(), repository.TaskFilter{UUID: gorm_provider.NewQueryFieldFilter(c.Params("uuid"))})
+	err := tc.TaskRepo.Delete(c.Context(), clause.Eq{Column: "uuid", Value: c.Params("uuid")})
 	if err != nil {
 		return err
 	}

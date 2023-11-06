@@ -21,15 +21,15 @@ SET row_security = off;
 --
 
 INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (1, 0, true, '2023-03-06 00:52:32.44439');
-INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (7, 1, true, '2023-09-23 23:33:47.591422');
-INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (8, 2, true, '2023-09-23 23:33:47.622758');
+INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (11, 1, true, '2023-11-06 11:09:33.246572');
+INSERT INTO public.goose_db_version (id, version_id, is_applied, tstamp) VALUES (12, 2, true, '2023-11-06 11:09:33.281475');
 
 
 --
 -- Name: goose_db_version_id_seq; Type: SEQUENCE SET; Schema: public; Owner: boring
 --
 
-SELECT pg_catalog.setval('public.goose_db_version_id_seq', 8, true);
+SELECT pg_catalog.setval('public.goose_db_version_id_seq', 12, true);
 
 
 --
