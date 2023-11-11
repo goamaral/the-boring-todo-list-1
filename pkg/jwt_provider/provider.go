@@ -67,7 +67,7 @@ func (p Provider) GenerateSignedToken(claims jwt.Claims) (string, error) {
 
 func (p Provider) GetClaims(signedToken string) (jwt.Claims, error) {
 	token, err := jwt.Parse(signedToken, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodEd25519); !ok {
+		if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method (alg: %v)", t.Header["alg"])
 		}
 		return p.PubKey, nil

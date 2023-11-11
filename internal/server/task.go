@@ -11,20 +11,24 @@ import (
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
 	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
+	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
 type taskController struct {
 	controller
 	TaskRepo repository.AbstractTaskRepository
+	UserRepo repository.AbstractUserRepository
 }
 
-func newTaskController(baseRouter fiber.Router, gormProvider gorm_provider.AbstractProvider) *taskController {
+func newTaskController(baseRouter fiber.Router, jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) *taskController {
 	ctrl := &taskController{
 		controller: newController(),
 		TaskRepo:   repository.NewTaskRepository(gormProvider),
+		UserRepo:   repository.NewUserRepository(gormProvider),
 	}
 
 	router := baseRouter.Group("/tasks")
+	router.Use(NewJWTAuthMiddleware(jwtProvider))
 	router.Post("/", ctrl.CreateTask)
 	router.Get("/", ctrl.ListTasks)
 	router.Get("/:uuid", ctrl.GetTask)
@@ -46,25 +50,32 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	req := CreateTaskRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
-		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
 
 	// Validate request
 	err = tc.validate.Struct(req)
 	if err != nil {
-		return sendValidationErrorsResponse(c, err.(validator.ValidationErrors))
+		return SendValidationErrorsResponse(c, err.(validator.ValidationErrors))
+	}
+
+	// Get Auth
+	authUser, err := GetAuthUser(c, tc.UserRepo)
+	if err != nil {
+		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
 	}
 
 	// Create task
 	task := entity.Task{
-		Title: req.Task.Title,
+		Title:    req.Task.Title,
+		AuthorID: authUser.ID,
 	}
 	err = tc.TaskRepo.Create(c.Context(), &task)
 	if err != nil {
 		return err
 	}
 
-	return sendCreatedResponse(c, task.UUID)
+	return SendCreatedResponse(c, task.UUID)
 }
 
 type ListTasksRequest struct {
@@ -80,13 +91,13 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	req := ListTasksRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
-		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
 
 	// Validate request
 	err = tc.validate.Struct(req)
 	if err != nil {
-		return sendValidationErrorsResponse(c, err.(validator.ValidationErrors))
+		return SendValidationErrorsResponse(c, err.(validator.ValidationErrors))
 	}
 
 	// Get last task fetched
@@ -123,7 +134,7 @@ func (tc *taskController) GetTask(c *fiber.Ctx) error {
 		return err
 	}
 	if !found {
-		return sendDefaultStatusResponse(c, http.StatusNotFound)
+		return SendDefaultStatusResponse(c, http.StatusNotFound)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(GetTaskResponse{Task: task})
@@ -138,7 +149,7 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 	req := PatchTaskRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
-		return sendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
 
 	// Patch task

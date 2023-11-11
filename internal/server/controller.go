@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -19,7 +20,8 @@ func newController() controller {
 	}
 }
 
-func sendDefaultStatusResponse(c *fiber.Ctx, status int) error {
+/* SUCCESS */
+func SendDefaultStatusResponse(c *fiber.Ctx, status int) error {
 	var msg string
 
 	switch status {
@@ -40,16 +42,18 @@ type CreateResponse struct {
 	UUID string `json:"uuid"`
 }
 
-func sendCreatedResponse(c *fiber.Ctx, uuid string) error {
+func SendCreatedResponse(c *fiber.Ctx, uuid string) error {
 	return c.Status(fiber.StatusCreated).JSON(CreateResponse{UUID: uuid})
 }
 
 /* ERRORS */
-func sendErrorResponse(c *fiber.Ctx, status int, err error) error {
+func SendErrorResponse(c *fiber.Ctx, status int, err error) error {
+	// TODO: Use logger
+	fmt.Printf("Error: %s", err.Error())
 	return c.Status(status).JSON(fiber.Map{"error": err.Error()})
 }
 
-func sendValidationErrorsResponse(c *fiber.Ctx, errs validator.ValidationErrors) error {
+func SendValidationErrorsResponse(c *fiber.Ctx, errs validator.ValidationErrors) error {
 	res := fiber.Map{}
 	var parent fiber.Map
 

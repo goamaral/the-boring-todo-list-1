@@ -8,7 +8,6 @@ CREATE TABLE "users" (
   "username" VARCHAR(255) NOT NULL UNIQUE,
   "encrypted_password" BYTEA NOT NULL
 );
-
 -- +goose StatementEnd
 
 -- +goose Down

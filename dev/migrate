@@ -19,5 +19,5 @@ go install github.com/pressly/goose/v3/cmd/goose@latest
 
 # Run goose
 export GOOSE_DRIVER=postgres
-export GOOSE_DBSTRING="postgresql://${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}?password=${DB_PASSWORD}"
+export GOOSE_DBSTRING="postgresql://${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}?password=${DB_PASS}"
 goose -dir $SCRIPT_DIR/../db/migrations -s $@

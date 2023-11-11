@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -17,8 +18,12 @@ import (
 	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 )
 
-func TestTaskRepository_TaskPatch(t *testing.T) {
+func TestMain(m *testing.M) {
 	config.LoadTestEnv()
+	os.Exit(m.Run())
+}
+
+func TestTaskRepository_TaskPatch(t *testing.T) {
 	repo := repository.NewTaskRepository(test.NewGormProvider(t))
 	newTitle := "New title"
 	newDoneAt := time.Date(2023, 9, 24, 12, 31, 0, 0, time.UTC)

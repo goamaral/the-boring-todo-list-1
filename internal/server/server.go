@@ -19,12 +19,12 @@ type Server struct {
 	TaskController *taskController
 }
 
-func NewServer(jwt_provider jwt_provider.Provider, gorm_provider gorm_provider.AbstractProvider) Server {
+func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) Server {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			// TODO: Add logger
+			// TODO: Use logger
 			fmt.Printf("Error: %s", err.Error())
-			return sendDefaultStatusResponse(c, fiber.StatusInternalServerError)
+			return SendDefaultStatusResponse(c, fiber.StatusInternalServerError)
 		},
 	})
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
@@ -37,8 +37,8 @@ func NewServer(jwt_provider jwt_provider.Provider, gorm_provider gorm_provider.A
 
 	return Server{
 		fiberApp:       fiberApp,
-		AuthController: newAuthController(fiberApp, jwt_provider, gorm_provider),
-		TaskController: newTaskController(fiberApp, gorm_provider),
+		AuthController: newAuthController(fiberApp, jwtProvider, gormProvider),
+		TaskController: newTaskController(fiberApp, jwtProvider, gormProvider),
 	}
 }
 
