@@ -75,11 +75,34 @@ CREATE TABLE public.tasks (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     title character varying(255) NOT NULL,
-    done_at timestamp without time zone
+    done_at timestamp without time zone,
+    author_id integer NOT NULL
 );
 
 
 ALTER TABLE public.tasks OWNER TO boring;
+
+--
+-- Name: tasks_author_id_seq; Type: SEQUENCE; Schema: public; Owner: boring
+--
+
+CREATE SEQUENCE public.tasks_author_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.tasks_author_id_seq OWNER TO boring;
+
+--
+-- Name: tasks_author_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: boring
+--
+
+ALTER SEQUENCE public.tasks_author_id_seq OWNED BY public.tasks.author_id;
+
 
 --
 -- Name: tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: boring
@@ -156,6 +179,13 @@ ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval('public.tasks_
 
 
 --
+-- Name: tasks author_id; Type: DEFAULT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.tasks ALTER COLUMN author_id SET DEFAULT nextval('public.tasks_author_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: boring
 --
 
@@ -208,6 +238,14 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_uuid_key UNIQUE (uuid);
+
+
+--
+-- Name: tasks tasks_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: boring
+--
+
+ALTER TABLE ONLY public.tasks
+    ADD CONSTRAINT tasks_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.users(id);
 
 
 --

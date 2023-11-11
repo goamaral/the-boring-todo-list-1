@@ -1,12 +1,12 @@
 package server_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -16,38 +16,42 @@ import (
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/internal/server"
+	"example.com/the-boring-to-do-list-1/internal/test"
 	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 	mock_gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider/mocks"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
 func TestTask_CreateTask(t *testing.T) {
+	jwtProvider := jwt_provider.NewTestProvider(t)
+	gormProvider := test.NewGormProvider(t)
+
+	user := test.AddUser(t, gormProvider, nil)
+	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
+		Subject:   user.UUID,
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
+	})
+	require.NoError(t, err)
+
+	s := server.NewServer(jwtProvider, gormProvider)
+
 	t.Run("Created", func(t *testing.T) {
 		title := "title"
 
-		taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
-		taskRepo.Mock.Test(nil)
-		taskRepo.EXPECT().
-			Create(mock.Anything, mock.Anything).
-			RunAndReturn(func(_ context.Context, task *entity.Task, _ ...any) error {
-				task.UUID = ulid.Make().String()
-				return nil
-			})
+		res := server.CreateResponse{}
+		require.NoError(t, s.NewTest(t, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{Title: title}}).
+			WithAuthorizationHeader(accessToken).
+			WithStatusCode(fiber.StatusCreated).
+			Send(&res))
 
-		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-		s.TaskController.TaskRepo = taskRepo
-
-		reqBody := server.CreateTaskRequest{Task: server.NewTask{Title: title}}
-		testRequest[server.CreateResponse](t, s, fiber.MethodPost, "/tasks", buildReqBodyReader(t, reqBody)).
-			Test(fiber.StatusCreated, func(resBody server.CreateResponse) {
-				assert.NotZero(t, resBody.UUID)
-			})
+		assert.NotZero(t, res.UUID)
 	})
 
 	t.Run("BadRequest", func(t *testing.T) {
-		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-		reqBody := server.CreateTaskRequest{Task: server.NewTask{}}
-		testRequest[string](t, s, fiber.MethodPost, "/tasks", buildReqBodyReader(t, reqBody)).Test(fiber.StatusBadRequest, nil)
+		require.NoError(t, s.NewTest(t, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{}}).
+			WithAuthorizationHeader(accessToken).
+			WithStatusCode(fiber.StatusBadRequest).
+			Send(nil))
 	})
 }
 
