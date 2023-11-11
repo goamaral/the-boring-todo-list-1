@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SCRIPT_PATH="$(cd "$(dirname "$0")" > /dev/null 2>&1; pwd -P)"
+SCRIPT_PATH=${0%/*}
 PROJECT_PATH=$SCRIPT_PATH/..
 
 go install github.com/vektra/mockery/v2@latest
@@ -12,5 +12,5 @@ mockery --all --case underscore --packageprefix mock_ --keeptree --with-expecter
 
 # PKG #
 rm -r $PROJECT_PATH/pkg/gorm_provider/mocks
-mockery --all --case underscore --packageprefix mock_ --keeptree --with-expecter \
+mockery --name AbstractRepository --case underscore --packageprefix mock_ --keeptree --with-expecter \
   --dir $PROJECT_PATH/pkg/gorm_provider --output $PROJECT_PATH/pkg/gorm_provider/mocks

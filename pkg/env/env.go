@@ -1,6 +1,8 @@
 package env
 
-import "os"
+import (
+	"os"
+)
 
 func Get(envName string) string {
 	return os.Getenv(envName)
@@ -20,4 +22,10 @@ func GetOrPanic(envName string) string {
 		panic("missing env var: " + envName)
 	}
 	return val
+}
+
+func SetEnvIfNotDefined(key, value string) {
+	if os.Getenv(key) == "" {
+		os.Setenv(key, value)
+	}
 }

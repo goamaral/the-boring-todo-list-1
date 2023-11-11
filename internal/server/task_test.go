@@ -29,7 +29,7 @@ func TestTask_CreateTask(t *testing.T) {
 		taskRepo.Mock.Test(nil)
 		taskRepo.EXPECT().
 			Create(mock.Anything, mock.Anything).
-			RunAndReturn(func(_ context.Context, task *entity.Task, _ ...clause.Expression) error {
+			RunAndReturn(func(_ context.Context, task *entity.Task, _ ...any) error {
 				task.UUID = ulid.Make().String()
 				return nil
 			})

@@ -5,10 +5,7 @@ package mock_gorm_provider
 import (
 	context "context"
 
-	clause "gorm.io/gorm/clause"
-
 	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
-
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -25,20 +22,16 @@ func (_m *AbstractRepository[T]) EXPECT() *AbstractRepository_Expecter[T] {
 	return &AbstractRepository_Expecter[T]{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: ctx, record, clauses
-func (_m *AbstractRepository[T]) Create(ctx context.Context, record *T, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Create provides a mock function with given fields: ctx, record, opts
+func (_m *AbstractRepository[T]) Create(ctx context.Context, record *T, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx, record)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *T, ...clause.Expression) error); ok {
-		r0 = rf(ctx, record, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, *T, ...interface{}) error); ok {
+		r0 = rf(ctx, record, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -54,18 +47,18 @@ type AbstractRepository_Create_Call[T gorm_provider.AbstractEntity] struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - record *T
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) Create(ctx interface{}, record interface{}, clauses ...interface{}) *AbstractRepository_Create_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) Create(ctx interface{}, record interface{}, opts ...interface{}) *AbstractRepository_Create_Call[T] {
 	return &AbstractRepository_Create_Call[T]{Call: _e.mock.On("Create",
-		append([]interface{}{ctx, record}, clauses...)...)}
+		append([]interface{}{ctx, record}, opts...)...)}
 }
 
-func (_c *AbstractRepository_Create_Call[T]) Run(run func(ctx context.Context, record *T, clauses ...clause.Expression)) *AbstractRepository_Create_Call[T] {
+func (_c *AbstractRepository_Create_Call[T]) Run(run func(ctx context.Context, record *T, opts ...interface{})) *AbstractRepository_Create_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-2)
+		variadicArgs := make([]interface{}, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), args[1].(*T), variadicArgs...)
@@ -78,25 +71,21 @@ func (_c *AbstractRepository_Create_Call[T]) Return(_a0 error) *AbstractReposito
 	return _c
 }
 
-func (_c *AbstractRepository_Create_Call[T]) RunAndReturn(run func(context.Context, *T, ...clause.Expression) error) *AbstractRepository_Create_Call[T] {
+func (_c *AbstractRepository_Create_Call[T]) RunAndReturn(run func(context.Context, *T, ...interface{}) error) *AbstractRepository_Create_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Delete provides a mock function with given fields: ctx, clauses
-func (_m *AbstractRepository[T]) Delete(ctx context.Context, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Delete provides a mock function with given fields: ctx, opts
+func (_m *AbstractRepository[T]) Delete(ctx context.Context, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) error); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) error); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -111,18 +100,18 @@ type AbstractRepository_Delete_Call[T gorm_provider.AbstractEntity] struct {
 
 // Delete is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) Delete(ctx interface{}, clauses ...interface{}) *AbstractRepository_Delete_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) Delete(ctx interface{}, opts ...interface{}) *AbstractRepository_Delete_Call[T] {
 	return &AbstractRepository_Delete_Call[T]{Call: _e.mock.On("Delete",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractRepository_Delete_Call[T]) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractRepository_Delete_Call[T] {
+func (_c *AbstractRepository_Delete_Call[T]) Run(run func(ctx context.Context, opts ...interface{})) *AbstractRepository_Delete_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -135,37 +124,33 @@ func (_c *AbstractRepository_Delete_Call[T]) Return(_a0 error) *AbstractReposito
 	return _c
 }
 
-func (_c *AbstractRepository_Delete_Call[T]) RunAndReturn(run func(context.Context, ...clause.Expression) error) *AbstractRepository_Delete_Call[T] {
+func (_c *AbstractRepository_Delete_Call[T]) RunAndReturn(run func(context.Context, ...interface{}) error) *AbstractRepository_Delete_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Find provides a mock function with given fields: ctx, clauses
-func (_m *AbstractRepository[T]) Find(ctx context.Context, clauses ...clause.Expression) ([]T, error) {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Find provides a mock function with given fields: ctx, opts
+func (_m *AbstractRepository[T]) Find(ctx context.Context, opts ...interface{}) ([]T, error) {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 []T
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) ([]T, error)); ok {
-		return rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) ([]T, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) []T); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) []T); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]T)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) error); ok {
-		r1 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(1).(func(context.Context, ...interface{}) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -180,18 +165,18 @@ type AbstractRepository_Find_Call[T gorm_provider.AbstractEntity] struct {
 
 // Find is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) Find(ctx interface{}, clauses ...interface{}) *AbstractRepository_Find_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) Find(ctx interface{}, opts ...interface{}) *AbstractRepository_Find_Call[T] {
 	return &AbstractRepository_Find_Call[T]{Call: _e.mock.On("Find",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractRepository_Find_Call[T]) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractRepository_Find_Call[T] {
+func (_c *AbstractRepository_Find_Call[T]) Run(run func(ctx context.Context, opts ...interface{})) *AbstractRepository_Find_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -204,25 +189,21 @@ func (_c *AbstractRepository_Find_Call[T]) Return(_a0 []T, _a1 error) *AbstractR
 	return _c
 }
 
-func (_c *AbstractRepository_Find_Call[T]) RunAndReturn(run func(context.Context, ...clause.Expression) ([]T, error)) *AbstractRepository_Find_Call[T] {
+func (_c *AbstractRepository_Find_Call[T]) RunAndReturn(run func(context.Context, ...interface{}) ([]T, error)) *AbstractRepository_Find_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindInBatches provides a mock function with given fields: ctx, bacthSize, fn, clauses
-func (_m *AbstractRepository[T]) FindInBatches(ctx context.Context, bacthSize int, fn func([]T) error, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// FindInBatches provides a mock function with given fields: ctx, bacthSize, fn, opts
+func (_m *AbstractRepository[T]) FindInBatches(ctx context.Context, bacthSize int, fn func([]T) error, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx, bacthSize, fn)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, func([]T) error, ...clause.Expression) error); ok {
-		r0 = rf(ctx, bacthSize, fn, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, func([]T) error, ...interface{}) error); ok {
+		r0 = rf(ctx, bacthSize, fn, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -239,18 +220,18 @@ type AbstractRepository_FindInBatches_Call[T gorm_provider.AbstractEntity] struc
 //   - ctx context.Context
 //   - bacthSize int
 //   - fn func([]T) error
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) FindInBatches(ctx interface{}, bacthSize interface{}, fn interface{}, clauses ...interface{}) *AbstractRepository_FindInBatches_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) FindInBatches(ctx interface{}, bacthSize interface{}, fn interface{}, opts ...interface{}) *AbstractRepository_FindInBatches_Call[T] {
 	return &AbstractRepository_FindInBatches_Call[T]{Call: _e.mock.On("FindInBatches",
-		append([]interface{}{ctx, bacthSize, fn}, clauses...)...)}
+		append([]interface{}{ctx, bacthSize, fn}, opts...)...)}
 }
 
-func (_c *AbstractRepository_FindInBatches_Call[T]) Run(run func(ctx context.Context, bacthSize int, fn func([]T) error, clauses ...clause.Expression)) *AbstractRepository_FindInBatches_Call[T] {
+func (_c *AbstractRepository_FindInBatches_Call[T]) Run(run func(ctx context.Context, bacthSize int, fn func([]T) error, opts ...interface{})) *AbstractRepository_FindInBatches_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-3)
+		variadicArgs := make([]interface{}, len(args)-3)
 		for i, a := range args[3:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), args[1].(int), args[2].(func([]T) error), variadicArgs...)
@@ -263,35 +244,31 @@ func (_c *AbstractRepository_FindInBatches_Call[T]) Return(_a0 error) *AbstractR
 	return _c
 }
 
-func (_c *AbstractRepository_FindInBatches_Call[T]) RunAndReturn(run func(context.Context, int, func([]T) error, ...clause.Expression) error) *AbstractRepository_FindInBatches_Call[T] {
+func (_c *AbstractRepository_FindInBatches_Call[T]) RunAndReturn(run func(context.Context, int, func([]T) error, ...interface{}) error) *AbstractRepository_FindInBatches_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindOne provides a mock function with given fields: ctx, clauses
-func (_m *AbstractRepository[T]) FindOne(ctx context.Context, clauses ...clause.Expression) (T, error) {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// FindOne provides a mock function with given fields: ctx, opts
+func (_m *AbstractRepository[T]) FindOne(ctx context.Context, opts ...interface{}) (T, error) {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 T
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) (T, error)); ok {
-		return rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) (T, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) T); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) T); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Get(0).(T)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) error); ok {
-		r1 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(1).(func(context.Context, ...interface{}) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -306,18 +283,18 @@ type AbstractRepository_FindOne_Call[T gorm_provider.AbstractEntity] struct {
 
 // FindOne is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) FindOne(ctx interface{}, clauses ...interface{}) *AbstractRepository_FindOne_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) FindOne(ctx interface{}, opts ...interface{}) *AbstractRepository_FindOne_Call[T] {
 	return &AbstractRepository_FindOne_Call[T]{Call: _e.mock.On("FindOne",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractRepository_FindOne_Call[T]) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractRepository_FindOne_Call[T] {
+func (_c *AbstractRepository_FindOne_Call[T]) Run(run func(ctx context.Context, opts ...interface{})) *AbstractRepository_FindOne_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -330,42 +307,38 @@ func (_c *AbstractRepository_FindOne_Call[T]) Return(_a0 T, _a1 error) *Abstract
 	return _c
 }
 
-func (_c *AbstractRepository_FindOne_Call[T]) RunAndReturn(run func(context.Context, ...clause.Expression) (T, error)) *AbstractRepository_FindOne_Call[T] {
+func (_c *AbstractRepository_FindOne_Call[T]) RunAndReturn(run func(context.Context, ...interface{}) (T, error)) *AbstractRepository_FindOne_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }
 
-// First provides a mock function with given fields: ctx, clauses
-func (_m *AbstractRepository[T]) First(ctx context.Context, clauses ...clause.Expression) (T, bool, error) {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// First provides a mock function with given fields: ctx, opts
+func (_m *AbstractRepository[T]) First(ctx context.Context, opts ...interface{}) (T, bool, error) {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 T
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) (T, bool, error)); ok {
-		return rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) (T, bool, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) T); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) T); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Get(0).(T)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) bool); ok {
-		r1 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(1).(func(context.Context, ...interface{}) bool); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, ...clause.Expression) error); ok {
-		r2 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(2).(func(context.Context, ...interface{}) error); ok {
+		r2 = rf(ctx, opts...)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -380,18 +353,18 @@ type AbstractRepository_First_Call[T gorm_provider.AbstractEntity] struct {
 
 // First is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) First(ctx interface{}, clauses ...interface{}) *AbstractRepository_First_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) First(ctx interface{}, opts ...interface{}) *AbstractRepository_First_Call[T] {
 	return &AbstractRepository_First_Call[T]{Call: _e.mock.On("First",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractRepository_First_Call[T]) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractRepository_First_Call[T] {
+func (_c *AbstractRepository_First_Call[T]) Run(run func(ctx context.Context, opts ...interface{})) *AbstractRepository_First_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -404,25 +377,21 @@ func (_c *AbstractRepository_First_Call[T]) Return(_a0 T, _a1 bool, _a2 error) *
 	return _c
 }
 
-func (_c *AbstractRepository_First_Call[T]) RunAndReturn(run func(context.Context, ...clause.Expression) (T, bool, error)) *AbstractRepository_First_Call[T] {
+func (_c *AbstractRepository_First_Call[T]) RunAndReturn(run func(context.Context, ...interface{}) (T, bool, error)) *AbstractRepository_First_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }
 
-// NewQuery provides a mock function with given fields: ctx, clauses
-func (_m *AbstractRepository[T]) NewQuery(ctx context.Context, clauses ...clause.Expression) gorm_provider.Query[T] {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// NewQuery provides a mock function with given fields: ctx, opts
+func (_m *AbstractRepository[T]) NewQuery(ctx context.Context, opts ...interface{}) gorm_provider.Query[T] {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 gorm_provider.Query[T]
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) gorm_provider.Query[T]); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) gorm_provider.Query[T]); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Get(0).(gorm_provider.Query[T])
 	}
@@ -437,18 +406,18 @@ type AbstractRepository_NewQuery_Call[T gorm_provider.AbstractEntity] struct {
 
 // NewQuery is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) NewQuery(ctx interface{}, clauses ...interface{}) *AbstractRepository_NewQuery_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) NewQuery(ctx interface{}, opts ...interface{}) *AbstractRepository_NewQuery_Call[T] {
 	return &AbstractRepository_NewQuery_Call[T]{Call: _e.mock.On("NewQuery",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractRepository_NewQuery_Call[T]) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractRepository_NewQuery_Call[T] {
+func (_c *AbstractRepository_NewQuery_Call[T]) Run(run func(ctx context.Context, opts ...interface{})) *AbstractRepository_NewQuery_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -461,7 +430,7 @@ func (_c *AbstractRepository_NewQuery_Call[T]) Return(_a0 gorm_provider.Query[T]
 	return _c
 }
 
-func (_c *AbstractRepository_NewQuery_Call[T]) RunAndReturn(run func(context.Context, ...clause.Expression) gorm_provider.Query[T]) *AbstractRepository_NewQuery_Call[T] {
+func (_c *AbstractRepository_NewQuery_Call[T]) RunAndReturn(run func(context.Context, ...interface{}) gorm_provider.Query[T]) *AbstractRepository_NewQuery_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }
@@ -509,20 +478,16 @@ func (_c *AbstractRepository_NewTransaction_Call[T]) RunAndReturn(run func(conte
 	return _c
 }
 
-// Update provides a mock function with given fields: ctx, update, clauses
-func (_m *AbstractRepository[T]) Update(ctx context.Context, update interface{}, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Update provides a mock function with given fields: ctx, update, opts
+func (_m *AbstractRepository[T]) Update(ctx context.Context, update interface{}, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx, update)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...clause.Expression) error); ok {
-		r0 = rf(ctx, update, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...interface{}) error); ok {
+		r0 = rf(ctx, update, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -538,18 +503,18 @@ type AbstractRepository_Update_Call[T gorm_provider.AbstractEntity] struct {
 // Update is a helper method to define mock.On call
 //   - ctx context.Context
 //   - update interface{}
-//   - clauses ...clause.Expression
-func (_e *AbstractRepository_Expecter[T]) Update(ctx interface{}, update interface{}, clauses ...interface{}) *AbstractRepository_Update_Call[T] {
+//   - opts ...interface{}
+func (_e *AbstractRepository_Expecter[T]) Update(ctx interface{}, update interface{}, opts ...interface{}) *AbstractRepository_Update_Call[T] {
 	return &AbstractRepository_Update_Call[T]{Call: _e.mock.On("Update",
-		append([]interface{}{ctx, update}, clauses...)...)}
+		append([]interface{}{ctx, update}, opts...)...)}
 }
 
-func (_c *AbstractRepository_Update_Call[T]) Run(run func(ctx context.Context, update interface{}, clauses ...clause.Expression)) *AbstractRepository_Update_Call[T] {
+func (_c *AbstractRepository_Update_Call[T]) Run(run func(ctx context.Context, update interface{}, opts ...interface{})) *AbstractRepository_Update_Call[T] {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-2)
+		variadicArgs := make([]interface{}, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), args[1].(interface{}), variadicArgs...)
@@ -562,7 +527,7 @@ func (_c *AbstractRepository_Update_Call[T]) Return(_a0 error) *AbstractReposito
 	return _c
 }
 
-func (_c *AbstractRepository_Update_Call[T]) RunAndReturn(run func(context.Context, interface{}, ...clause.Expression) error) *AbstractRepository_Update_Call[T] {
+func (_c *AbstractRepository_Update_Call[T]) RunAndReturn(run func(context.Context, interface{}, ...interface{}) error) *AbstractRepository_Update_Call[T] {
 	_c.Call.Return(run)
 	return _c
 }

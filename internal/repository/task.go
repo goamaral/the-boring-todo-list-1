@@ -10,7 +10,7 @@ type AbstractTaskRepository interface {
 }
 
 const (
-	tasksTableName = "tasks"
+	TasksTableName = "tasks"
 )
 
 type TaskRepository struct {
@@ -18,5 +18,5 @@ type TaskRepository struct {
 }
 
 func NewTaskRepository(gormProvider gorm_provider.AbstractProvider) TaskRepository {
-	return TaskRepository{Repository: gorm_provider.NewRepository[entity.Task](gormProvider, tasksTableName)}
+	return TaskRepository{Repository: gorm_provider.NewRepository[entity.Task](gormProvider, TasksTableName)}
 }
