@@ -1,4 +1,4 @@
-package gorm_provider_postgres
+package postgres_gorm_provider
 
 import (
 	"io"
@@ -11,13 +11,13 @@ import (
 	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 )
 
-func NewDSN() gorm_provider.DSN {
+func DefaultDSN() gorm_provider.DSN {
 	return gorm_provider.DSN{
 		Host:     env.GetOrDefault("DB_HOST", "localhost"),
 		Port:     env.GetOrDefault("DB_PORT", "5432"),
 		DBName:   env.GetOrDefault("DB_NAME", "postgres"),
 		User:     env.GetOrDefault("DB_USER", "postgres"),
-		Password: env.GetOrDefault("DB_PASSWORD", "postgres"),
+		Password: env.GetOrDefault("DB_PASS", "postgres"),
 	}
 }
 

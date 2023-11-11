@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"example.com/the-boring-to-do-list-1/internal/server"
-	gorm_provider_postgres "example.com/the-boring-to-do-list-1/pkg/gorm_provider/postgres"
+	postgres_gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider/postgres"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
@@ -16,7 +16,7 @@ func main() {
 
 	/* PROVIDERS */
 	// Gorm
-	gorm_provider, err := gorm_provider_postgres.NewProvider(gorm_provider_postgres.NewDSN())
+	gorm_provider, err := postgres_gorm_provider.NewProvider(postgres_gorm_provider.DefaultDSN())
 	if err != nil {
 		panic(err)
 	}

@@ -5,10 +5,7 @@ package mock_repository
 import (
 	context "context"
 
-	clause "gorm.io/gorm/clause"
-
 	entity "example.com/the-boring-to-do-list-1/internal/entity"
-
 	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 
 	mock "github.com/stretchr/testify/mock"
@@ -27,20 +24,16 @@ func (_m *AbstractTaskRepository) EXPECT() *AbstractTaskRepository_Expecter {
 	return &AbstractTaskRepository_Expecter{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: ctx, record, clauses
-func (_m *AbstractTaskRepository) Create(ctx context.Context, record *entity.Task, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Create provides a mock function with given fields: ctx, record, opts
+func (_m *AbstractTaskRepository) Create(ctx context.Context, record *entity.Task, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx, record)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *entity.Task, ...clause.Expression) error); ok {
-		r0 = rf(ctx, record, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, *entity.Task, ...interface{}) error); ok {
+		r0 = rf(ctx, record, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -56,18 +49,18 @@ type AbstractTaskRepository_Create_Call struct {
 // Create is a helper method to define mock.On call
 //   - ctx context.Context
 //   - record *entity.Task
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) Create(ctx interface{}, record interface{}, clauses ...interface{}) *AbstractTaskRepository_Create_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) Create(ctx interface{}, record interface{}, opts ...interface{}) *AbstractTaskRepository_Create_Call {
 	return &AbstractTaskRepository_Create_Call{Call: _e.mock.On("Create",
-		append([]interface{}{ctx, record}, clauses...)...)}
+		append([]interface{}{ctx, record}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_Create_Call) Run(run func(ctx context.Context, record *entity.Task, clauses ...clause.Expression)) *AbstractTaskRepository_Create_Call {
+func (_c *AbstractTaskRepository_Create_Call) Run(run func(ctx context.Context, record *entity.Task, opts ...interface{})) *AbstractTaskRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-2)
+		variadicArgs := make([]interface{}, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), args[1].(*entity.Task), variadicArgs...)
@@ -80,25 +73,21 @@ func (_c *AbstractTaskRepository_Create_Call) Return(_a0 error) *AbstractTaskRep
 	return _c
 }
 
-func (_c *AbstractTaskRepository_Create_Call) RunAndReturn(run func(context.Context, *entity.Task, ...clause.Expression) error) *AbstractTaskRepository_Create_Call {
+func (_c *AbstractTaskRepository_Create_Call) RunAndReturn(run func(context.Context, *entity.Task, ...interface{}) error) *AbstractTaskRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Delete provides a mock function with given fields: ctx, clauses
-func (_m *AbstractTaskRepository) Delete(ctx context.Context, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Delete provides a mock function with given fields: ctx, opts
+func (_m *AbstractTaskRepository) Delete(ctx context.Context, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) error); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) error); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -113,18 +102,18 @@ type AbstractTaskRepository_Delete_Call struct {
 
 // Delete is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) Delete(ctx interface{}, clauses ...interface{}) *AbstractTaskRepository_Delete_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) Delete(ctx interface{}, opts ...interface{}) *AbstractTaskRepository_Delete_Call {
 	return &AbstractTaskRepository_Delete_Call{Call: _e.mock.On("Delete",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_Delete_Call) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractTaskRepository_Delete_Call {
+func (_c *AbstractTaskRepository_Delete_Call) Run(run func(ctx context.Context, opts ...interface{})) *AbstractTaskRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -137,37 +126,33 @@ func (_c *AbstractTaskRepository_Delete_Call) Return(_a0 error) *AbstractTaskRep
 	return _c
 }
 
-func (_c *AbstractTaskRepository_Delete_Call) RunAndReturn(run func(context.Context, ...clause.Expression) error) *AbstractTaskRepository_Delete_Call {
+func (_c *AbstractTaskRepository_Delete_Call) RunAndReturn(run func(context.Context, ...interface{}) error) *AbstractTaskRepository_Delete_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Find provides a mock function with given fields: ctx, clauses
-func (_m *AbstractTaskRepository) Find(ctx context.Context, clauses ...clause.Expression) ([]entity.Task, error) {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Find provides a mock function with given fields: ctx, opts
+func (_m *AbstractTaskRepository) Find(ctx context.Context, opts ...interface{}) ([]entity.Task, error) {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 []entity.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) ([]entity.Task, error)); ok {
-		return rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) ([]entity.Task, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) []entity.Task); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) []entity.Task); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.Task)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) error); ok {
-		r1 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(1).(func(context.Context, ...interface{}) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -182,18 +167,18 @@ type AbstractTaskRepository_Find_Call struct {
 
 // Find is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) Find(ctx interface{}, clauses ...interface{}) *AbstractTaskRepository_Find_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) Find(ctx interface{}, opts ...interface{}) *AbstractTaskRepository_Find_Call {
 	return &AbstractTaskRepository_Find_Call{Call: _e.mock.On("Find",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_Find_Call) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractTaskRepository_Find_Call {
+func (_c *AbstractTaskRepository_Find_Call) Run(run func(ctx context.Context, opts ...interface{})) *AbstractTaskRepository_Find_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -206,25 +191,21 @@ func (_c *AbstractTaskRepository_Find_Call) Return(_a0 []entity.Task, _a1 error)
 	return _c
 }
 
-func (_c *AbstractTaskRepository_Find_Call) RunAndReturn(run func(context.Context, ...clause.Expression) ([]entity.Task, error)) *AbstractTaskRepository_Find_Call {
+func (_c *AbstractTaskRepository_Find_Call) RunAndReturn(run func(context.Context, ...interface{}) ([]entity.Task, error)) *AbstractTaskRepository_Find_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindInBatches provides a mock function with given fields: ctx, bacthSize, fn, clauses
-func (_m *AbstractTaskRepository) FindInBatches(ctx context.Context, bacthSize int, fn func([]entity.Task) error, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// FindInBatches provides a mock function with given fields: ctx, bacthSize, fn, opts
+func (_m *AbstractTaskRepository) FindInBatches(ctx context.Context, bacthSize int, fn func([]entity.Task) error, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx, bacthSize, fn)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, func([]entity.Task) error, ...clause.Expression) error); ok {
-		r0 = rf(ctx, bacthSize, fn, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, func([]entity.Task) error, ...interface{}) error); ok {
+		r0 = rf(ctx, bacthSize, fn, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -241,18 +222,18 @@ type AbstractTaskRepository_FindInBatches_Call struct {
 //   - ctx context.Context
 //   - bacthSize int
 //   - fn func([]entity.Task) error
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) FindInBatches(ctx interface{}, bacthSize interface{}, fn interface{}, clauses ...interface{}) *AbstractTaskRepository_FindInBatches_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) FindInBatches(ctx interface{}, bacthSize interface{}, fn interface{}, opts ...interface{}) *AbstractTaskRepository_FindInBatches_Call {
 	return &AbstractTaskRepository_FindInBatches_Call{Call: _e.mock.On("FindInBatches",
-		append([]interface{}{ctx, bacthSize, fn}, clauses...)...)}
+		append([]interface{}{ctx, bacthSize, fn}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_FindInBatches_Call) Run(run func(ctx context.Context, bacthSize int, fn func([]entity.Task) error, clauses ...clause.Expression)) *AbstractTaskRepository_FindInBatches_Call {
+func (_c *AbstractTaskRepository_FindInBatches_Call) Run(run func(ctx context.Context, bacthSize int, fn func([]entity.Task) error, opts ...interface{})) *AbstractTaskRepository_FindInBatches_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-3)
+		variadicArgs := make([]interface{}, len(args)-3)
 		for i, a := range args[3:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), args[1].(int), args[2].(func([]entity.Task) error), variadicArgs...)
@@ -265,35 +246,31 @@ func (_c *AbstractTaskRepository_FindInBatches_Call) Return(_a0 error) *Abstract
 	return _c
 }
 
-func (_c *AbstractTaskRepository_FindInBatches_Call) RunAndReturn(run func(context.Context, int, func([]entity.Task) error, ...clause.Expression) error) *AbstractTaskRepository_FindInBatches_Call {
+func (_c *AbstractTaskRepository_FindInBatches_Call) RunAndReturn(run func(context.Context, int, func([]entity.Task) error, ...interface{}) error) *AbstractTaskRepository_FindInBatches_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindOne provides a mock function with given fields: ctx, clauses
-func (_m *AbstractTaskRepository) FindOne(ctx context.Context, clauses ...clause.Expression) (entity.Task, error) {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// FindOne provides a mock function with given fields: ctx, opts
+func (_m *AbstractTaskRepository) FindOne(ctx context.Context, opts ...interface{}) (entity.Task, error) {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 entity.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) (entity.Task, error)); ok {
-		return rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) (entity.Task, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) entity.Task); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) entity.Task); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Get(0).(entity.Task)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) error); ok {
-		r1 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(1).(func(context.Context, ...interface{}) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -308,18 +285,18 @@ type AbstractTaskRepository_FindOne_Call struct {
 
 // FindOne is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) FindOne(ctx interface{}, clauses ...interface{}) *AbstractTaskRepository_FindOne_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) FindOne(ctx interface{}, opts ...interface{}) *AbstractTaskRepository_FindOne_Call {
 	return &AbstractTaskRepository_FindOne_Call{Call: _e.mock.On("FindOne",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_FindOne_Call) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractTaskRepository_FindOne_Call {
+func (_c *AbstractTaskRepository_FindOne_Call) Run(run func(ctx context.Context, opts ...interface{})) *AbstractTaskRepository_FindOne_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -332,42 +309,38 @@ func (_c *AbstractTaskRepository_FindOne_Call) Return(_a0 entity.Task, _a1 error
 	return _c
 }
 
-func (_c *AbstractTaskRepository_FindOne_Call) RunAndReturn(run func(context.Context, ...clause.Expression) (entity.Task, error)) *AbstractTaskRepository_FindOne_Call {
+func (_c *AbstractTaskRepository_FindOne_Call) RunAndReturn(run func(context.Context, ...interface{}) (entity.Task, error)) *AbstractTaskRepository_FindOne_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// First provides a mock function with given fields: ctx, clauses
-func (_m *AbstractTaskRepository) First(ctx context.Context, clauses ...clause.Expression) (entity.Task, bool, error) {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// First provides a mock function with given fields: ctx, opts
+func (_m *AbstractTaskRepository) First(ctx context.Context, opts ...interface{}) (entity.Task, bool, error) {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 entity.Task
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) (entity.Task, bool, error)); ok {
-		return rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) (entity.Task, bool, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) entity.Task); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) entity.Task); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Get(0).(entity.Task)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) bool); ok {
-		r1 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(1).(func(context.Context, ...interface{}) bool); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, ...clause.Expression) error); ok {
-		r2 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(2).(func(context.Context, ...interface{}) error); ok {
+		r2 = rf(ctx, opts...)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -382,18 +355,18 @@ type AbstractTaskRepository_First_Call struct {
 
 // First is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) First(ctx interface{}, clauses ...interface{}) *AbstractTaskRepository_First_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) First(ctx interface{}, opts ...interface{}) *AbstractTaskRepository_First_Call {
 	return &AbstractTaskRepository_First_Call{Call: _e.mock.On("First",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_First_Call) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractTaskRepository_First_Call {
+func (_c *AbstractTaskRepository_First_Call) Run(run func(ctx context.Context, opts ...interface{})) *AbstractTaskRepository_First_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -406,25 +379,21 @@ func (_c *AbstractTaskRepository_First_Call) Return(_a0 entity.Task, _a1 bool, _
 	return _c
 }
 
-func (_c *AbstractTaskRepository_First_Call) RunAndReturn(run func(context.Context, ...clause.Expression) (entity.Task, bool, error)) *AbstractTaskRepository_First_Call {
+func (_c *AbstractTaskRepository_First_Call) RunAndReturn(run func(context.Context, ...interface{}) (entity.Task, bool, error)) *AbstractTaskRepository_First_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// NewQuery provides a mock function with given fields: ctx, clauses
-func (_m *AbstractTaskRepository) NewQuery(ctx context.Context, clauses ...clause.Expression) gorm_provider.Query[entity.Task] {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// NewQuery provides a mock function with given fields: ctx, opts
+func (_m *AbstractTaskRepository) NewQuery(ctx context.Context, opts ...interface{}) gorm_provider.Query[entity.Task] {
 	var _ca []interface{}
 	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 gorm_provider.Query[entity.Task]
-	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) gorm_provider.Query[entity.Task]); ok {
-		r0 = rf(ctx, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...interface{}) gorm_provider.Query[entity.Task]); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Get(0).(gorm_provider.Query[entity.Task])
 	}
@@ -439,18 +408,18 @@ type AbstractTaskRepository_NewQuery_Call struct {
 
 // NewQuery is a helper method to define mock.On call
 //   - ctx context.Context
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) NewQuery(ctx interface{}, clauses ...interface{}) *AbstractTaskRepository_NewQuery_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) NewQuery(ctx interface{}, opts ...interface{}) *AbstractTaskRepository_NewQuery_Call {
 	return &AbstractTaskRepository_NewQuery_Call{Call: _e.mock.On("NewQuery",
-		append([]interface{}{ctx}, clauses...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_NewQuery_Call) Run(run func(ctx context.Context, clauses ...clause.Expression)) *AbstractTaskRepository_NewQuery_Call {
+func (_c *AbstractTaskRepository_NewQuery_Call) Run(run func(ctx context.Context, opts ...interface{})) *AbstractTaskRepository_NewQuery_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-1)
+		variadicArgs := make([]interface{}, len(args)-1)
 		for i, a := range args[1:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), variadicArgs...)
@@ -463,7 +432,7 @@ func (_c *AbstractTaskRepository_NewQuery_Call) Return(_a0 gorm_provider.Query[e
 	return _c
 }
 
-func (_c *AbstractTaskRepository_NewQuery_Call) RunAndReturn(run func(context.Context, ...clause.Expression) gorm_provider.Query[entity.Task]) *AbstractTaskRepository_NewQuery_Call {
+func (_c *AbstractTaskRepository_NewQuery_Call) RunAndReturn(run func(context.Context, ...interface{}) gorm_provider.Query[entity.Task]) *AbstractTaskRepository_NewQuery_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -511,20 +480,16 @@ func (_c *AbstractTaskRepository_NewTransaction_Call) RunAndReturn(run func(cont
 	return _c
 }
 
-// Update provides a mock function with given fields: ctx, update, clauses
-func (_m *AbstractTaskRepository) Update(ctx context.Context, update interface{}, clauses ...clause.Expression) error {
-	_va := make([]interface{}, len(clauses))
-	for _i := range clauses {
-		_va[_i] = clauses[_i]
-	}
+// Update provides a mock function with given fields: ctx, update, opts
+func (_m *AbstractTaskRepository) Update(ctx context.Context, update interface{}, opts ...interface{}) error {
 	var _ca []interface{}
 	_ca = append(_ca, ctx, update)
-	_ca = append(_ca, _va...)
+	_ca = append(_ca, opts...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...clause.Expression) error); ok {
-		r0 = rf(ctx, update, clauses...)
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, ...interface{}) error); ok {
+		r0 = rf(ctx, update, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -540,18 +505,18 @@ type AbstractTaskRepository_Update_Call struct {
 // Update is a helper method to define mock.On call
 //   - ctx context.Context
 //   - update interface{}
-//   - clauses ...clause.Expression
-func (_e *AbstractTaskRepository_Expecter) Update(ctx interface{}, update interface{}, clauses ...interface{}) *AbstractTaskRepository_Update_Call {
+//   - opts ...interface{}
+func (_e *AbstractTaskRepository_Expecter) Update(ctx interface{}, update interface{}, opts ...interface{}) *AbstractTaskRepository_Update_Call {
 	return &AbstractTaskRepository_Update_Call{Call: _e.mock.On("Update",
-		append([]interface{}{ctx, update}, clauses...)...)}
+		append([]interface{}{ctx, update}, opts...)...)}
 }
 
-func (_c *AbstractTaskRepository_Update_Call) Run(run func(ctx context.Context, update interface{}, clauses ...clause.Expression)) *AbstractTaskRepository_Update_Call {
+func (_c *AbstractTaskRepository_Update_Call) Run(run func(ctx context.Context, update interface{}, opts ...interface{})) *AbstractTaskRepository_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]clause.Expression, len(args)-2)
+		variadicArgs := make([]interface{}, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(clause.Expression)
+				variadicArgs[i] = a.(interface{})
 			}
 		}
 		run(args[0].(context.Context), args[1].(interface{}), variadicArgs...)
@@ -564,7 +529,7 @@ func (_c *AbstractTaskRepository_Update_Call) Return(_a0 error) *AbstractTaskRep
 	return _c
 }
 
-func (_c *AbstractTaskRepository_Update_Call) RunAndReturn(run func(context.Context, interface{}, ...clause.Expression) error) *AbstractTaskRepository_Update_Call {
+func (_c *AbstractTaskRepository_Update_Call) RunAndReturn(run func(context.Context, interface{}, ...interface{}) error) *AbstractTaskRepository_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

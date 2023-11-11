@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm/clause"
 
+	"example.com/the-boring-to-do-list-1/internal/config"
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/internal/test"
@@ -17,7 +18,8 @@ import (
 )
 
 func TestTaskRepository_TaskPatch(t *testing.T) {
-	repo := repository.NewTaskRepository(test.NewTestProvider(t))
+	config.LoadTestEnv()
+	repo := repository.NewTaskRepository(test.NewGormProvider(t))
 	newTitle := "New title"
 	newDoneAt := time.Date(2023, 9, 24, 12, 31, 0, 0, time.UTC)
 

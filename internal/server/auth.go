@@ -64,7 +64,7 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 	// Get user password
 	user, found, err := ct.UserRepo.First(
 		c.Context(),
-		gorm_provider.SelectClause("id", "username"),
+		gorm_provider.SelectOption("id", "username"),
 		clause.Eq{Column: "username", Value: req.Username},
 	)
 	if err != nil {

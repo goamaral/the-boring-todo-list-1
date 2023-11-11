@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
+	"example.com/the-boring-to-do-list-1/internal/config"
 	"example.com/the-boring-to-do-list-1/internal/server"
-	"example.com/the-boring-to-do-list-1/internal/test"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -19,10 +18,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := test.LoadEnv()
-	if err != nil {
-		log.Fatalf("failed to load env: %v", err)
-	}
+	config.LoadTestEnv()
 	os.Exit(m.Run())
 }
 

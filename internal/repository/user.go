@@ -10,7 +10,7 @@ type AbstractUserRepository interface {
 }
 
 const (
-	usersTableName = "users"
+	UsersTableName = "users"
 )
 
 type UserRepository struct {
@@ -18,5 +18,5 @@ type UserRepository struct {
 }
 
 func NewUserRepository(gormProvider gorm_provider.AbstractProvider) UserRepository {
-	return UserRepository{Repository: gorm_provider.NewRepository[entity.User](gormProvider, usersTableName)}
+	return UserRepository{Repository: gorm_provider.NewRepository[entity.User](gormProvider, UsersTableName)}
 }

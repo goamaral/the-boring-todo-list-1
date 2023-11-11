@@ -29,7 +29,7 @@ func TestAuth_Login(t *testing.T) {
 		userRepo.EXPECT().
 			First(
 				mock.Anything,
-				gorm_provider.SelectClause("id", "username"),
+				gorm_provider.SelectOption("id", "username"),
 				clause.Eq{Column: "username", Value: username},
 			).
 			Return(user, true, nil)
