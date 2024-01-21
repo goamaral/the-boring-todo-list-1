@@ -16,8 +16,8 @@ import (
 
 type taskController struct {
 	controller
-	TaskRepo repository.AbstractTaskRepository
-	UserRepo repository.AbstractUserRepository
+	TaskRepo repository.TaskRepository
+	UserRepo repository.UserRepository
 }
 
 func newTaskController(baseRouter fiber.Router, jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) *taskController {
@@ -60,7 +60,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	}
 
 	// Get Auth
-	authUser, err := GetAuthUser(c, tc.UserRepo)
+	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
 		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
 	}
@@ -103,18 +103,25 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// Get last task fetched
 	var lastId uint = 0
 	if req.PaginationToken != "" {
-		task, err := tc.TaskRepo.FindOne(c.Context(), clause.Eq{Column: "uuid", Value: req.PaginationToken})
+		task, err := tc.TaskRepo.First(c.Context(), clause.Eq{Column: "uuid", Value: req.PaginationToken})
 		if err != nil {
 			return err
 		}
 		lastId = task.ID
 	}
 
+	// Get Auth
+	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
+	if err != nil {
+		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+	}
+
 	// List tasks
 	tasks, err := tc.TaskRepo.Find(
 		c.Context(),
+		clause.Eq{Column: "author_id", Value: authUser.ID},
 		clause.Gt{Column: "id", Value: lastId},
-		lo.If[clause.Expression](req.Done, clause.Neq{Column: "done_at", Value: nil}).Else(clause.Eq{Column: "done_at", Value: nil}),
+		lo.Ternary[clause.Expression](req.Done, clause.Neq{Column: "done_at", Value: nil}, clause.Eq{Column: "done_at", Value: nil}),
 	)
 	if err != nil {
 		return err
@@ -128,8 +135,18 @@ type GetTaskResponse struct {
 }
 
 func (tc *taskController) GetTask(c *fiber.Ctx) error {
+	// Get Auth
+	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
+	if err != nil {
+		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+	}
+
 	// Get task
-	task, found, err := tc.TaskRepo.First(c.Context(), clause.Eq{Column: "uuid", Value: c.Params("uuid")})
+	task, found, err := tc.TaskRepo.FindOne(
+		c.Context(),
+		clause.Eq{Column: "author_id", Value: authUser.ID},
+		clause.Eq{Column: "uuid", Value: c.Params("uuid")},
+	)
 	if err != nil {
 		return err
 	}
@@ -152,8 +169,19 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
 
+	// Get Auth
+	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
+	if err != nil {
+		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+	}
+
 	// Patch task
-	err = tc.TaskRepo.Update(c.Context(), req.Patch, clause.Eq{Column: "uuid", Value: c.Params("uuid")})
+	err = tc.TaskRepo.Update(
+		c.Context(),
+		req.Patch,
+		clause.Eq{Column: "author_id", Value: authUser.ID},
+		clause.Eq{Column: "uuid", Value: c.Params("uuid")},
+	)
 	if err != nil {
 		return err
 	}
@@ -162,8 +190,18 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 }
 
 func (tc *taskController) DeleteTask(c *fiber.Ctx) error {
+	// Get Auth
+	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
+	if err != nil {
+		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+	}
+
 	// Delete task
-	err := tc.TaskRepo.Delete(c.Context(), clause.Eq{Column: "uuid", Value: c.Params("uuid")})
+	err = tc.TaskRepo.Delete(
+		c.Context(),
+		clause.Eq{Column: "author_id", Value: authUser.ID},
+		clause.Eq{Column: "uuid", Value: c.Params("uuid")},
+	)
 	if err != nil {
 		return err
 	}

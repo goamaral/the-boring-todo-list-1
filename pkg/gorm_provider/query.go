@@ -48,12 +48,12 @@ func (q Query[T]) FindInBatches(bacthSize int, fn func([]T) error) error {
 	return nil
 }
 
-func (q Query[T]) FindOne() (T, error) {
+func (q Query[T]) First() (T, error) {
 	var record T
 	return record, q.DB.First(&record).Error
 }
 
-func (q Query[T]) First() (T, bool, error) {
+func (q Query[T]) FindOne() (T, bool, error) {
 	var record T
 	err := q.DB.First(&record).Error
 	if err != nil {
