@@ -5,10 +5,6 @@ import (
 	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 )
 
-type AbstractTaskRepository interface {
-	gorm_provider.AbstractRepository[entity.Task]
-}
-
 const (
 	TasksTableName = "tasks"
 )

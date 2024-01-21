@@ -15,7 +15,7 @@ func RelativePath(relativePath string) string {
 }
 
 func LoadTestEnv() {
-	env.SetEnvIfNotDefined("ENV", "TEST")
+	env.SetEnvIfNotDefined("ENV", "test")
 	env.SetEnvIfNotDefined("DB_HOST", "localhost")
 	env.SetEnvIfNotDefined("DB_PORT", "5432")
 	env.SetEnvIfNotDefined("DB_NAME", "the_boring_todo_list_1")

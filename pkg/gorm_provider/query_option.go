@@ -23,6 +23,8 @@ func ApplyQueryOptions(qry *gorm.DB, opts ...any) *gorm.DB {
 			qry = qry.Clauses(o)
 		case []clause.Expression:
 			qry = ApplyQueryOptions(qry, lo.ToAnySlice(o)...)
+		case []any:
+			qry = ApplyQueryOptions(qry, o...)
 		default:
 			qry.AddError(fmt.Errorf("ApplyQueryOptions: unsupported option (%#v)", o))
 		}

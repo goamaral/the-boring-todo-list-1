@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:14
+    image: postgres
     environment:
       - POSTGRES_DB=the_boring_todo_list_1
       - POSTGRES_USER=boring

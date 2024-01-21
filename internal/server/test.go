@@ -13,65 +13,69 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type test struct {
+type test[RES any] struct {
+	tt      *testing.T
 	app     *fiber.App
 	request *http.Request
-
-	statusCode int
 }
 
-func (s Server) NewTest(t *testing.T, method string, route string, reqBody any) *test {
+func NewTest[RES any](t *testing.T, s Server, method string, route string, reqBody any) test[RES] {
 	reqBodyBytes, err := json.Marshal(reqBody)
 	require.NoError(t, err, "failed to marshal request body")
 
-	tst := &test{
-		app:        s.fiberApp,
-		request:    httptest.NewRequest(method, route, bytes.NewReader(reqBodyBytes)),
-		statusCode: http.StatusOK,
+	tst := test[RES]{
+		tt:      t,
+		app:     s.fiberApp,
+		request: httptest.NewRequest(method, route, bytes.NewReader(reqBodyBytes)),
 	}
 
 	return tst.WithContentType("application/json")
 }
 
-func (t *test) WithHeader(key string, value string) *test {
+func (t test[RES]) WithHeader(key string, value string) test[RES] {
 	t.request.Header.Set(key, value)
 	return t
 }
 
-func (t *test) WithContentType(value string) *test {
+func (t test[RES]) WithContentType(value string) test[RES] {
 	return t.WithHeader("Content-Type", value)
 }
 
-func (t *test) WithAuthorizationHeader(value string) *test {
+func (t test[RES]) WithAuthorizationHeader(value string) test[RES] {
 	return t.WithHeader("Authorization", fmt.Sprintf("Bearer %s", value))
 }
 
-func (t *test) WithStatusCode(code int) *test {
-	t.statusCode = code
+func (t test[RES]) Send() *testResult[RES] {
+	res, err := t.app.Test(t.request, -1)
+	require.NoError(t.tt, err, "failed to send request")
+
+	return &testResult[RES]{tt: t.tt, res: res}
+}
+
+type testResult[RES any] struct {
+	tt                *testing.T
+	res               *http.Response
+	statusCodeChecked bool
+}
+
+func (t *testResult[RES]) ExpectsStatusCode(statusCode int) *testResult[RES] {
+	require.Equal(t.tt, statusCode, t.res.StatusCode)
+	t.statusCodeChecked = true
 	return t
 }
 
-func (t *test) Send(resBody any) error {
-	res, err := t.app.Test(t.request, -1)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %w", err)
+func (t testResult[RES]) Body() []byte {
+	if !t.statusCodeChecked {
+		t.ExpectsStatusCode(fiber.StatusOK)
 	}
 
-	bodyBytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body: %w", err)
-	}
+	bodyBytes, err := io.ReadAll(t.res.Body)
+	require.NoError(t.tt, err, "failed to read response body")
+	return bodyBytes
+}
 
-	if t.statusCode == res.StatusCode {
-		if resBody != nil {
-			err := json.Unmarshal(bodyBytes, resBody)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal response body: %w", err)
-			}
-		}
-	} else {
-		return fmt.Errorf("unexpected status code (Got: %d, Expected: %d) with body (%s)", res.StatusCode, t.statusCode, string(bodyBytes))
-	}
-
-	return nil
+func (t testResult[RES]) UnmarshalBody() RES {
+	var dst RES
+	require.NoError(t.tt, json.Unmarshal(t.Body(), &dst), "failed to unmarshal body")
+	return dst
 }

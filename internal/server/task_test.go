@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm/clause"
 
@@ -18,7 +18,6 @@ import (
 	"example.com/the-boring-to-do-list-1/internal/server"
 	"example.com/the-boring-to-do-list-1/internal/test"
 	gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider"
-	mock_gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider/mocks"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
@@ -26,92 +25,107 @@ func TestTask_CreateTask(t *testing.T) {
 	jwtProvider := jwt_provider.NewTestProvider(t)
 	gormProvider := test.NewGormProvider(t)
 
-	user := test.AddUser(t, gormProvider, nil)
+	user := test.AddUser(t, gormProvider, entity.User{})
+	s := server.NewServer(jwtProvider, gormProvider)
 	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
 		Subject:   user.UUID,
 		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
 	})
 	require.NoError(t, err)
 
-	s := server.NewServer(jwtProvider, gormProvider)
-
 	t.Run("Created", func(t *testing.T) {
 		title := "title"
 
-		res := server.CreateResponse{}
-		require.NoError(t, s.NewTest(t, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{Title: title}}).
+		res := server.NewTest[server.CreateResponse](t, s, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{Title: title}}).
 			WithAuthorizationHeader(accessToken).
-			WithStatusCode(fiber.StatusCreated).
-			Send(&res))
+			Send().
+			ExpectsStatusCode(fiber.StatusCreated).
+			UnmarshalBody()
 
-		assert.NotZero(t, res.UUID)
+		task, err := repository.NewTaskRepository(gormProvider).First(context.Background(), clause.Eq{Column: "uuid", Value: res.UUID})
+		require.NoError(t, err)
+		assert.Equal(t, task.AuthorID, user.ID)
 	})
 
 	t.Run("BadRequest", func(t *testing.T) {
-		require.NoError(t, s.NewTest(t, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{}}).
+		server.NewTest[any](t, s, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{}}).
 			WithAuthorizationHeader(accessToken).
-			WithStatusCode(fiber.StatusBadRequest).
-			Send(nil))
+			Send().
+			ExpectsStatusCode(fiber.StatusBadRequest)
 	})
 }
 
 func TestTask_ListTasks(t *testing.T) {
-	uuid := ulid.Make().String()
-	reqBody := server.ListTasksRequest{}
+	jwtProvider := jwt_provider.NewTestProvider(t)
+	gormProvider := test.NewGormProvider(t)
 
-	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
-	taskRepo.Mock.Test(nil)
-	taskRepo.EXPECT().
-		Find(mock.Anything, clause.Gt{Column: "id", Value: uint(0)}, clause.Eq{Column: "done_at", Value: nil}).
-		Return([]entity.Task{{EntityWithUUID: gorm_provider.EntityWithUUID{UUID: uuid}}}, nil)
+	user := test.AddUser(t, gormProvider, entity.User{})
+	task := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID})
 
-	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-	s.TaskController.TaskRepo = taskRepo
+	userB := test.AddUser(t, gormProvider, entity.User{})
+	test.AddTask(t, gormProvider, entity.Task{AuthorID: userB.ID})
 
-	testRequest[server.ListTasksResponse](t, s, fiber.MethodGet, "/tasks", buildReqBodyReader(t, reqBody)).
-		Test(fiber.StatusOK, func(resBody server.ListTasksResponse) {
-			require.Len(t, resBody.Tasks, 1)
-			assert.Equal(t, uuid, resBody.Tasks[0].UUID)
-		})
+	s := server.NewServer(jwtProvider, gormProvider)
+	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
+		Subject:   user.UUID,
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
+	})
+	require.NoError(t, err)
+
+	res := server.NewTest[server.ListTasksResponse](t, s, fiber.MethodGet, "/tasks", server.ListTasksRequest{}).
+		WithAuthorizationHeader(accessToken).
+		Send().
+		UnmarshalBody()
+
+	require.Len(t, res.Tasks, 1)
+	assert.Equal(t, task.UUID, res.Tasks[0].UUID)
 }
 
 func TestTask_GetTask(t *testing.T) {
+	jwtProvider := jwt_provider.NewTestProvider(t)
+	gormProvider := test.NewGormProvider(t)
+
+	user := test.AddUser(t, gormProvider, entity.User{})
+	task := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID})
+
+	s := server.NewServer(jwtProvider, gormProvider)
+	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
+		Subject:   user.UUID,
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
+	})
+	require.NoError(t, err)
+
 	t.Run("OK", func(t *testing.T) {
-		task := entity.Task{EntityWithUUID: gorm_provider.EntityWithUUID{UUID: ulid.Make().String()}}
+		res := server.NewTest[server.GetTaskResponse](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", task.UUID), nil).
+			WithAuthorizationHeader(accessToken).
+			Send().
+			UnmarshalBody()
 
-		taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
-		taskRepo.Mock.Test(nil)
-		taskRepo.EXPECT().
-			First(mock.Anything, clause.Eq{Column: "uuid", Value: task.UUID}).
-			Return(task, true, nil)
-
-		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-		s.TaskController.TaskRepo = taskRepo
-
-		testRequest[server.GetTaskResponse](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", task.UUID), nil).
-			Test(fiber.StatusOK, func(resBody server.GetTaskResponse) {
-				assert.Equal(t, task, resBody.Task)
-			})
+		assert.Equal(t, task.UUID, res.Task.UUID)
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
-		uuid := ulid.Make().String()
-
-		taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
-		taskRepo.Mock.Test(nil)
-		taskRepo.EXPECT().
-			First(mock.Anything, clause.Eq{Column: "uuid", Value: uuid}).
-			Return(entity.Task{}, false, nil)
-
-		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-		s.TaskController.TaskRepo = taskRepo
-
-		testRequest[string](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", uuid), nil).Test(fiber.StatusNotFound, nil)
+		server.NewTest[server.GetTaskResponse](t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", ulid.Make().String()), nil).
+			WithAuthorizationHeader(accessToken).
+			Send().
+			ExpectsStatusCode(fiber.StatusNotFound)
 	})
 }
 
 func TestTask_PatchTask(t *testing.T) {
-	uuid := ulid.Make().String()
+	jwtProvider := jwt_provider.NewTestProvider(t)
+	gormProvider := test.NewGormProvider(t)
+
+	user := test.AddUser(t, gormProvider, entity.User{})
+	taskUuid := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID}).UUID
+
+	s := server.NewServer(jwtProvider, gormProvider)
+	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
+		Subject:   user.UUID,
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
+	})
+	require.NoError(t, err)
+
 	title := "updated title"
 	doneAt := time.Date(2023, 9, 24, 12, 11, 0, 0, time.UTC)
 	patch := repository.TaskPatch{
@@ -119,30 +133,38 @@ func TestTask_PatchTask(t *testing.T) {
 		DoneAt: gorm_provider.NewOptionalField(&doneAt),
 	}
 
-	reqBody := server.PatchTaskRequest{Patch: patch}
-	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
-	taskRepo.Mock.Test(nil)
-	taskRepo.EXPECT().
-		Update(mock.Anything, patch, clause.Eq{Column: "uuid", Value: uuid}).
-		Return(nil)
+	req := server.PatchTaskRequest{Patch: patch}
+	server.NewTest[any](t, s, fiber.MethodPatch, fmt.Sprintf("/tasks/%s", taskUuid), req).
+		WithAuthorizationHeader(accessToken).
+		Send().
+		ExpectsStatusCode(fiber.StatusOK)
 
-	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-	s.TaskController.TaskRepo = taskRepo
-
-	testRequest[string](t, s, fiber.MethodPatch, fmt.Sprintf("/tasks/%s", uuid), buildReqBodyReader(t, reqBody)).
-		Test(fiber.StatusOK, nil)
+	task, err := repository.NewTaskRepository(gormProvider).First(context.Background(), clause.Eq{Column: "uuid", Value: taskUuid})
+	require.NoError(t, err)
+	assert.Equal(t, title, task.Title)
+	assert.Equal(t, doneAt, *task.DoneAt)
 }
 
 func TestTask_DeleteTask(t *testing.T) {
-	uuid := ulid.Make().String()
-	taskRepo := mock_gorm_provider.NewAbstractRepository[entity.Task](t)
-	taskRepo.Mock.Test(nil)
-	taskRepo.EXPECT().
-		Delete(mock.Anything, clause.Eq{Column: "uuid", Value: uuid}).
-		Return(nil)
+	jwtProvider := jwt_provider.NewTestProvider(t)
+	gormProvider := test.NewGormProvider(t)
 
-	s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-	s.TaskController.TaskRepo = taskRepo
+	user := test.AddUser(t, gormProvider, entity.User{})
+	taskUuid := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID}).UUID
 
-	testRequest[string](t, s, fiber.MethodDelete, fmt.Sprintf("/tasks/%s", uuid), nil).Test(fiber.StatusOK, nil)
+	s := server.NewServer(jwtProvider, gormProvider)
+	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
+		Subject:   user.UUID,
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
+	})
+	require.NoError(t, err)
+
+	server.NewTest[any](t, s, fiber.MethodDelete, fmt.Sprintf("/tasks/%s", taskUuid), nil).
+		WithAuthorizationHeader(accessToken).
+		Send().
+		ExpectsStatusCode(fiber.StatusOK)
+
+	_, found, err := repository.NewTaskRepository(gormProvider).FindOne(context.Background(), clause.Eq{Column: "uuid", Value: taskUuid})
+	require.NoError(t, err)
+	require.False(t, found)
 }

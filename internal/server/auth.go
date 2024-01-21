@@ -19,7 +19,7 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 type authController struct {
 	controller
 	jwtProvider jwt_provider.Provider
-	UserRepo    repository.AbstractUserRepository
+	UserRepo    repository.UserRepository
 }
 
 func newAuthController(baseRouter fiber.Router, jwtProvider jwt_provider.Provider, gorm_provider gorm_provider.AbstractProvider) *authController {
@@ -59,9 +59,9 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 	}
 
 	// Get user password
-	user, found, err := ct.UserRepo.First(
+	user, found, err := ct.UserRepo.FindOne(
 		c.Context(),
-		gorm_provider.SelectOption("id", "username"),
+		gorm_provider.SelectOption("encrypted_password"),
 		clause.Eq{Column: "username", Value: req.Username},
 	)
 	if err != nil {
