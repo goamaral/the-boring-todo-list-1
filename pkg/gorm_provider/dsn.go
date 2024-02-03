@@ -1,21 +1,17 @@
 package gorm_provider
 
-import (
-	"fmt"
-)
+import "fmt"
 
 type DSN struct {
+	Protocol string
+	User     string
 	Host     string
 	Port     string
 	DBName   string
-	User     string
 	Password string
+	SSLMode  string
 }
 
 func (dsn DSN) String() string {
-	return fmt.Sprintf("postgresql://%s@%s:%s/%s?password=%s", dsn.User, dsn.Host, dsn.Port, dsn.DBName, dsn.Password)
-}
-
-func (dsn DSN) ConnectionString() string {
-	return fmt.Sprintf("user=%s host=%s port=%s database=%s password=%s sslmode=disable", dsn.User, dsn.Host, dsn.Port, dsn.DBName, dsn.Password)
+	return fmt.Sprintf("%s://%s@%s:%s/%s?password=%s&sslmode=%s&timezone=UTC", dsn.Protocol, dsn.User, dsn.Host, dsn.Port, dsn.DBName, dsn.Password, dsn.SSLMode)
 }

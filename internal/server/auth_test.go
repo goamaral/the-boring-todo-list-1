@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,8 +15,9 @@ import (
 )
 
 func TestAuth_Login(t *testing.T) {
+	ctx := context.Background()
+	gormProvider := test.NewGormProvider(t, ctx)
 	jwtProvider := jwt_provider.NewTestProvider(t)
-	gormProvider := test.NewGormProvider(t)
 
 	s := server.NewServer(jwtProvider, gormProvider)
 

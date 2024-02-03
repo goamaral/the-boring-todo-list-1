@@ -22,8 +22,9 @@ import (
 )
 
 func TestTask_CreateTask(t *testing.T) {
+	ctx := context.Background()
+	gormProvider := test.NewGormProvider(t, ctx)
 	jwtProvider := jwt_provider.NewTestProvider(t)
-	gormProvider := test.NewGormProvider(t)
 
 	user := test.AddUser(t, gormProvider, entity.User{})
 	s := server.NewServer(jwtProvider, gormProvider)
@@ -56,8 +57,9 @@ func TestTask_CreateTask(t *testing.T) {
 }
 
 func TestTask_ListTasks(t *testing.T) {
+	ctx := context.Background()
+	gormProvider := test.NewGormProvider(t, ctx)
 	jwtProvider := jwt_provider.NewTestProvider(t)
-	gormProvider := test.NewGormProvider(t)
 
 	user := test.AddUser(t, gormProvider, entity.User{})
 	task := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID})
@@ -82,8 +84,9 @@ func TestTask_ListTasks(t *testing.T) {
 }
 
 func TestTask_GetTask(t *testing.T) {
+	ctx := context.Background()
+	gormProvider := test.NewGormProvider(t, ctx)
 	jwtProvider := jwt_provider.NewTestProvider(t)
-	gormProvider := test.NewGormProvider(t)
 
 	user := test.AddUser(t, gormProvider, entity.User{})
 	task := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID})
@@ -113,8 +116,9 @@ func TestTask_GetTask(t *testing.T) {
 }
 
 func TestTask_PatchTask(t *testing.T) {
+	ctx := context.Background()
+	gormProvider := test.NewGormProvider(t, ctx)
 	jwtProvider := jwt_provider.NewTestProvider(t)
-	gormProvider := test.NewGormProvider(t)
 
 	user := test.AddUser(t, gormProvider, entity.User{})
 	taskUuid := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID}).UUID
@@ -146,8 +150,9 @@ func TestTask_PatchTask(t *testing.T) {
 }
 
 func TestTask_DeleteTask(t *testing.T) {
+	ctx := context.Background()
+	gormProvider := test.NewGormProvider(t, ctx)
 	jwtProvider := jwt_provider.NewTestProvider(t)
-	gormProvider := test.NewGormProvider(t)
 
 	user := test.AddUser(t, gormProvider, entity.User{})
 	taskUuid := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID}).UUID

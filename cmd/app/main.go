@@ -2,31 +2,26 @@ package main
 
 import (
 	"os"
-	"path/filepath"
-	"runtime"
 
+	"example.com/the-boring-to-do-list-1/internal/initializer"
 	"example.com/the-boring-to-do-list-1/internal/server"
-	postgres_gorm_provider "example.com/the-boring-to-do-list-1/pkg/gorm_provider/postgres"
+	"example.com/the-boring-to-do-list-1/pkg/fs"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
 
 func main() {
-	_, b, _, _ := runtime.Caller(0)
-	folderPath := filepath.Dir(b)
-
-	/* PROVIDERS */
 	// Gorm
-	gorm_provider, err := postgres_gorm_provider.NewProvider(postgres_gorm_provider.DefaultDSN())
+	gorm_provider, err := initializer.NewProvider(initializer.DefaultDSN())
 	if err != nil {
 		panic(err)
 	}
 
 	// JWT
-	privKeyFile, err := os.Open(folderPath + "/../../secrets/ecdsa")
+	privKeyFile, err := os.Open(fs.RelativePath("../../secrets/ecdsa"))
 	if err != nil {
 		panic(err)
 	}
-	pubKeyFile, err := os.Open(folderPath + "/../../secrets/ecdsa.pub")
+	pubKeyFile, err := os.Open(fs.RelativePath("../../secrets/ecdsa.pub"))
 	if err != nil {
 		panic(err)
 	}

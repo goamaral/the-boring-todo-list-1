@@ -2,7 +2,6 @@ package repository_test
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -11,20 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm/clause"
 
-	"example.com/the-boring-to-do-list-1/internal/config"
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/internal/test"
 	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 )
 
-func TestMain(m *testing.M) {
-	config.LoadTestEnv()
-	os.Exit(m.Run())
-}
-
 func TestTaskRepository_TaskPatch(t *testing.T) {
-	gormProvider := test.NewGormProvider(t)
+	ctx := context.Background()
+	gormProvider := test.NewGormProvider(t, ctx)
 	user := test.AddUser(t, gormProvider, entity.User{})
 	repo := repository.NewTaskRepository(gormProvider)
 	newTitle := "New title"
@@ -38,10 +32,10 @@ func TestTaskRepository_TaskPatch(t *testing.T) {
 	runTest := func(test Test) func(t *testing.T) {
 		return func(t *testing.T) {
 			test.Task.AuthorID = user.ID
-			require.NoError(t, repo.Create(context.Background(), &test.Task))
+			require.NoError(t, repo.Create(ctx, &test.Task))
 			filter := clause.Eq{Column: "id", Value: test.Task.ID}
-			require.NoError(t, repo.Update(context.Background(), test.TaskPatch, filter))
-			updatedTask, err := repo.First(context.Background(), filter)
+			require.NoError(t, repo.Update(ctx, test.TaskPatch, filter))
+			updatedTask, err := repo.First(ctx, filter)
 			require.NoError(t, err)
 			assert.Greater(t, updatedTask.UpdatedAt.UnixMicro(), test.Task.UpdatedAt.UnixMicro())
 			if test.Assert != nil {
