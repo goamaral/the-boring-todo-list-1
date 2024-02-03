@@ -4,15 +4,15 @@ import (
 	"os"
 	"testing"
 
-	"example.com/the-boring-to-do-list-1/internal/config"
 	"example.com/the-boring-to-do-list-1/internal/server"
+	"example.com/the-boring-to-do-list-1/internal/test"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-	config.LoadTestEnv()
+	test.LoadEnv()
 	os.Exit(m.Run())
 }
 
