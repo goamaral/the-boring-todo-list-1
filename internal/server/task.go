@@ -44,6 +44,9 @@ type NewTask struct {
 type CreateTaskRequest struct {
 	Task NewTask `json:"task" validate:"required"`
 }
+type CreateTaskResponse struct {
+	UUID string `json:"uuid"`
+}
 
 func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	// Parse request
@@ -75,7 +78,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 		return err
 	}
 
-	return SendCreatedResponse(c, task.UUID)
+	return c.Status(http.StatusCreated).JSON(CreateTaskResponse{UUID: task.UUID})
 }
 
 type ListTasksRequest struct {
@@ -151,7 +154,7 @@ func (tc *taskController) GetTask(c *fiber.Ctx) error {
 		return err
 	}
 	if !found {
-		return SendDefaultStatusResponse(c, http.StatusNotFound)
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(GetTaskResponse{Task: task})

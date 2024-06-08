@@ -24,7 +24,7 @@ func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.Abs
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// TODO: Use logger
 			fmt.Printf("Error: %s", err.Error())
-			return SendDefaultStatusResponse(c, fiber.StatusInternalServerError)
+			return c.SendStatus(fiber.StatusInternalServerError)
 		},
 	})
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))

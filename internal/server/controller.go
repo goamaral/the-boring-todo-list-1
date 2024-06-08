@@ -2,12 +2,10 @@ package server
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/pkg/errors"
 )
 
 type controller struct {
@@ -18,32 +16,6 @@ func newController() controller {
 	return controller{
 		validate: validator.New(),
 	}
-}
-
-/* SUCCESS */
-func SendDefaultStatusResponse(c *fiber.Ctx, status int) error {
-	var msg string
-
-	switch status {
-	case http.StatusOK:
-		msg = "OK"
-	case http.StatusNotFound:
-		msg = "Not found"
-	case http.StatusInternalServerError:
-		msg = "Internal error"
-	default:
-		return errors.Errorf("http status (%d) has no default response defined", status)
-	}
-
-	return c.Status(status).JSON(msg)
-}
-
-type CreateResponse struct {
-	UUID string `json:"uuid"`
-}
-
-func SendCreatedResponse(c *fiber.Ctx, uuid string) error {
-	return c.Status(fiber.StatusCreated).JSON(CreateResponse{UUID: uuid})
 }
 
 /* ERRORS */
@@ -73,7 +45,7 @@ func SendValidationErrorsResponse(c *fiber.Ctx, errs validator.ValidationErrors)
 				currMap = curr.(fiber.Map)
 			}
 			if i == len(nsParts)-1 {
-				currMap[err.Tag()] = err.Param()
+				currMap[err.Tag()] = decapitalize(err.Param())
 			}
 			parent[nsPart] = currMap
 			parent = currMap

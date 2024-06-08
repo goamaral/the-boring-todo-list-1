@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,16 +27,13 @@ func TestTask_CreateTask(t *testing.T) {
 
 	user := test.AddUser(t, gormProvider, entity.User{})
 	s := server.NewServer(jwtProvider, gormProvider)
-	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.UUID,
-		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
-	})
+	accessToken, err := server.GenerateAccessToken(jwtProvider, user.UUID)
 	require.NoError(t, err)
 
 	t.Run("Created", func(t *testing.T) {
 		title := "title"
 
-		res := server.NewTest[server.CreateResponse](t, s, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{Title: title}}).
+		res := server.NewTest[server.CreateTaskResponse](t, s, fiber.MethodPost, "/tasks", server.CreateTaskRequest{Task: server.NewTask{Title: title}}).
 			WithAuthorizationHeader(accessToken).
 			Send().
 			ExpectsStatusCode(fiber.StatusCreated).
@@ -68,10 +64,7 @@ func TestTask_ListTasks(t *testing.T) {
 	test.AddTask(t, gormProvider, entity.Task{AuthorID: userB.ID})
 
 	s := server.NewServer(jwtProvider, gormProvider)
-	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.UUID,
-		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
-	})
+	accessToken, err := server.GenerateAccessToken(jwtProvider, user.UUID)
 	require.NoError(t, err)
 
 	res := server.NewTest[server.ListTasksResponse](t, s, fiber.MethodGet, "/tasks", server.ListTasksRequest{}).
@@ -92,10 +85,7 @@ func TestTask_GetTask(t *testing.T) {
 	task := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID})
 
 	s := server.NewServer(jwtProvider, gormProvider)
-	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.UUID,
-		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
-	})
+	accessToken, err := server.GenerateAccessToken(jwtProvider, user.UUID)
 	require.NoError(t, err)
 
 	t.Run("OK", func(t *testing.T) {
@@ -124,10 +114,7 @@ func TestTask_PatchTask(t *testing.T) {
 	taskUuid := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID}).UUID
 
 	s := server.NewServer(jwtProvider, gormProvider)
-	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.UUID,
-		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
-	})
+	accessToken, err := server.GenerateAccessToken(jwtProvider, user.UUID)
 	require.NoError(t, err)
 
 	title := "updated title"
@@ -158,10 +145,7 @@ func TestTask_DeleteTask(t *testing.T) {
 	taskUuid := test.AddTask(t, gormProvider, entity.Task{AuthorID: user.ID}).UUID
 
 	s := server.NewServer(jwtProvider, gormProvider)
-	accessToken, err := jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.UUID,
-		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Hour)},
-	})
+	accessToken, err := server.GenerateAccessToken(jwtProvider, user.UUID)
 	require.NoError(t, err)
 
 	server.NewTest[any](t, s, fiber.MethodDelete, fmt.Sprintf("/tasks/%s", taskUuid), nil).

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
 	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
@@ -15,6 +16,7 @@ import (
 
 var ErrAuthorizationHeader = errors.New("authorization header is missing/invalid")
 var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrUserAlreadyExists = errors.New("user already exists")
 
 type authController struct {
 	controller
@@ -31,8 +33,23 @@ func newAuthController(baseRouter fiber.Router, jwtProvider jwt_provider.Provide
 
 	router := baseRouter.Group("/auth")
 	router.Post("/login", ctrl.Login)
+	router.Post("/register", ctrl.Register)
 
 	return ctrl
+}
+
+func GenerateAccessToken(jwtProvider jwt_provider.Provider, userUUID string) (string, error) {
+	return jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
+		Subject:   userUUID,
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(15 * time.Minute)},
+	})
+}
+
+func GenerateRefreshToken(jwtProvider jwt_provider.Provider, userUUID string) (string, error) {
+	return jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
+		Subject:   userUUID,
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(24 * time.Hour)},
+	})
 }
 
 type LoginRequest struct {
@@ -81,22 +98,69 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 	}
 
 	// Generate JWT access token
-	accessToken, err := ct.jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.UUID,
-		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(15 * time.Minute)},
-	})
+	accessToken, err := GenerateAccessToken(ct.jwtProvider, user.UUID)
 	if err != nil {
-		return SendDefaultStatusResponse(c, fiber.StatusInternalServerError)
+		return err
 	}
 
 	// Generate JWT refresh token
-	refreshToken, err := ct.jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   user.UUID,
-		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(24 * time.Hour)},
-	})
+	refreshToken, err := GenerateRefreshToken(ct.jwtProvider, user.UUID)
 	if err != nil {
-		return SendDefaultStatusResponse(c, fiber.StatusInternalServerError)
+		return err
 	}
 
 	return c.JSON(LoginResponse{AccessToken: accessToken, RefreshToken: refreshToken})
+}
+
+type RegisterRequest struct {
+	Username        string `json:"username" validate:"required"`
+	Password        string `json:"password" validate:"required"`
+	ConfirmPassword string `json:"confirmPassword" validate:"eqfield=Password"`
+}
+type RegisterResponse struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+func (ct *authController) Register(c *fiber.Ctx) error {
+	// Parse request
+	req := RegisterRequest{}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+	}
+
+	// Validate request
+	err = ct.validate.Struct(req)
+	if err != nil {
+		return SendValidationErrorsResponse(c, err.(validator.ValidationErrors))
+	}
+
+	// Create user
+	user := entity.User{Username: req.Username}
+	err = user.SetEncryptedPassword(req.Password)
+	if err != nil {
+		return err
+	}
+	err = ct.UserRepo.Create(c.Context(), &user)
+	if err != nil {
+		if gorm_provider.HasErrorCode(err, gorm_provider.UniqueConstraintViolation) {
+			return SendErrorResponse(c, fiber.StatusBadRequest, ErrUserAlreadyExists)
+		}
+		return err
+	}
+
+	// Generate JWT access token
+	accessToken, err := GenerateAccessToken(ct.jwtProvider, user.UUID)
+	if err != nil {
+		return err
+	}
+
+	// Generate JWT refresh token
+	refreshToken, err := GenerateRefreshToken(ct.jwtProvider, user.UUID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(RegisterResponse{AccessToken: accessToken, RefreshToken: refreshToken})
 }
