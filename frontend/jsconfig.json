@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
-    "jsxFactory": "el"
+    "jsxFactory": "el",
+    "jsxImportSource": "redom"
   }
 }

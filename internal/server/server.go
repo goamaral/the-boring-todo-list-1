@@ -31,6 +31,7 @@ func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.Abs
 	if env.GetOrDefault("ENV", "production") != "test" {
 		fiberApp.Use(recover.New())
 	}
+	fiberApp.Static("/static", "./public")
 	fiberApp.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
