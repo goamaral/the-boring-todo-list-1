@@ -2,9 +2,11 @@ package server_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -29,12 +31,11 @@ func TestAuth_Login(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {
 		req := server.LoginRequest{Username: username, Password: password}
-		res := server.NewTest[server.LoginResponse](t, s, fiber.MethodPost, "/auth/login", req).
-			Send().
-			UnmarshalBody()
-
-		assert.NotZero(t, res.AccessToken)
-		assert.NotZero(t, res.RefreshToken)
+		res := server.NewTest(t, s, fiber.MethodPost, "/auth/login", req).Send()
+		assert.Equal(t, fiber.StatusFound, res.StatusCode)
+		assert.Equal(t, "/tasks", res.Header.Get("Location"))
+		assert.NotZero(t, lo.CountBy(res.Cookies(), func(c *http.Cookie) bool { return c.Name == "accessToken" }))
+		assert.NotZero(t, lo.CountBy(res.Cookies(), func(c *http.Cookie) bool { return c.Name == "refreshToken" }))
 	})
 
 	t.Run("BadRequest/InvalidCredentials/UserNotFound", func(t *testing.T) {
@@ -57,22 +58,18 @@ func TestAuth_Register(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {
 		req := server.RegisterRequest{Username: test.RandomString(), Password: password, ConfirmPassword: password}
-		res := server.NewTest[server.RegisterResponse](t, s, fiber.MethodPost, "/auth/register", req).
-			Send().
-			UnmarshalBody()
-
-		assert.NotZero(t, res.AccessToken)
-		assert.NotZero(t, res.RefreshToken)
+		res := server.NewTest(t, s, fiber.MethodPost, "/auth/register", req).Send()
+		assert.Equal(t, fiber.StatusFound, res.StatusCode)
+		assert.Equal(t, "/tasks", res.Header.Get("Location"))
+		assert.NotZero(t, lo.CountBy(res.Cookies(), func(c *http.Cookie) bool { return c.Name == "accessToken" }))
+		assert.NotZero(t, lo.CountBy(res.Cookies(), func(c *http.Cookie) bool { return c.Name == "refreshToken" }))
 	})
 
 	t.Run("BadRequest/Validation/InvalidConfirmPassword", func(t *testing.T) {
 		req := server.RegisterRequest{Username: test.RandomString(), Password: password, ConfirmPassword: password + "a"}
-		res := server.NewTest[map[string]any](t, s, fiber.MethodPost, "/auth/register", req).
-			Send().
-			ExpectsStatusCode(fiber.StatusBadRequest).
-			UnmarshalBody()
-
-		assert.Equal(t, "password", res["confirmPassword"].(map[string]any)["eqfield"])
+		res := server.NewTest(t, s, fiber.MethodPost, "/auth/register", req).Send()
+		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
+		// TODO: assert.Equal(t, "password", res["confirmPassword"].(map[string]any)["eqfield"])
 	})
 
 	t.Run("BadRequest/UserAlreadyExists", func(t *testing.T) {
@@ -81,11 +78,8 @@ func TestAuth_Register(t *testing.T) {
 		user = test.AddUser(t, gormProvider, user)
 
 		req := server.RegisterRequest{Username: user.Username, Password: password, ConfirmPassword: password}
-		res := server.NewTest[map[string]any](t, s, fiber.MethodPost, "/auth/register", req).
-			Send().
-			ExpectsStatusCode(fiber.StatusBadRequest).
-			UnmarshalBody()
-
-		assert.Equal(t, server.ErrUserAlreadyExists.Error(), res["error"])
+		res := server.NewTest(t, s, fiber.MethodPost, "/auth/register", req).Send()
+		assert.Equal(t, fiber.StatusBadRequest, res.StatusCode)
+		// TODO: assert.Equal(t, server.ErrUserAlreadyExists.Error(), res["error"])
 	})
 }

@@ -1,5 +1,5 @@
 # Build
-FROM golang:1.20-bullseye AS build
+FROM docker.io/golang:1.20-bullseye AS build
 
 WORKDIR /project
 

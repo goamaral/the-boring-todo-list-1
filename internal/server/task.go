@@ -65,7 +65,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+		return Logout(c)
 	}
 
 	// Create task
@@ -116,7 +116,7 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+		return Logout(c)
 	}
 
 	// List tasks
@@ -141,7 +141,7 @@ func (tc *taskController) GetTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+		return Logout(c)
 	}
 
 	// Get task
@@ -175,7 +175,7 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+		return Logout(c)
 	}
 
 	// Patch task
@@ -196,7 +196,7 @@ func (tc *taskController) DeleteTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnauthorized, ErrAuthorizationHeader)
+		return Logout(c)
 	}
 
 	// Delete task

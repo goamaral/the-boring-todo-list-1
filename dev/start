@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
-DIR=${0%/*}
+DIR=$(realpath ${0%/*})
 
 declare -A ARG_MAP
 for ARG in "$@"; do
@@ -9,15 +9,15 @@ done
 
 trap handle_ctrl_c INT
 function handle_ctrl_c() {
-  docker compose --project-name the-boring-todo-list-1 -f "${DIR}/docker-compose.yml" stop
+  podman-compose --project-name the-boring-todo-list-1 -f "${DIR}/docker-compose.yml" stop
 }
 
-(docker compose --project-name the-boring-todo-list-1 -f "${DIR}/docker-compose.yml" up)&
+(podman-compose --project-name the-boring-todo-list-1 -f "${DIR}/docker-compose.yml" up)&
 
 if [[ ! ${ARG_MAP["--skip-app"]} ]]; then
   go install github.com/joho/godotenv/cmd/godotenv@latest
-  go install github.com/cosmtrek/air@latest
-  godotenv air -build.cmd "go build -o tmp/main ./cmd/app"
+  go install github.com/air-verse/air@latest
+  ENV=development godotenv air -build.cmd "go build -o tmp/main ./cmd/app"
 else
   while true; do sleep 1000; done
 fi

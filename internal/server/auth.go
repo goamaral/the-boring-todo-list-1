@@ -2,10 +2,12 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
 	"example.com/the-boring-to-do-list-1/internal/repository"
+	"example.com/the-boring-to-do-list-1/pkg/env"
 	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 	"github.com/go-playground/validator/v10"
@@ -14,7 +16,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var ErrAuthorizationHeader = errors.New("authorization header is missing/invalid")
 var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrUserAlreadyExists = errors.New("user already exists")
 
@@ -33,6 +34,7 @@ func newAuthController(baseRouter fiber.Router, jwtProvider jwt_provider.Provide
 
 	router := baseRouter.Group("/auth")
 	router.Post("/login", ctrl.Login)
+	router.Get("/register", ctrl.NewRegister)
 	router.Post("/register", ctrl.Register)
 
 	return ctrl
@@ -55,10 +57,6 @@ func GenerateRefreshToken(jwtProvider jwt_provider.Provider, userUUID string) (s
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
-}
-type LoginResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
 }
 
 func (ct *authController) Login(c *fiber.Ctx) error {
@@ -97,29 +95,17 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 		return SendErrorResponse(c, fiber.StatusBadRequest, ErrInvalidCredentials)
 	}
 
-	// Generate JWT access token
-	accessToken, err := GenerateAccessToken(ct.jwtProvider, user.UUID)
-	if err != nil {
-		return err
-	}
+	return ct.afterAuthenticate(c, user.UUID)
+}
 
-	// Generate JWT refresh token
-	refreshToken, err := GenerateRefreshToken(ct.jwtProvider, user.UUID)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(LoginResponse{AccessToken: accessToken, RefreshToken: refreshToken})
+func (ct *authController) NewRegister(c *fiber.Ctx) error {
+	return c.Render("auth/register", nil)
 }
 
 type RegisterRequest struct {
 	Username        string `json:"username" validate:"required"`
 	Password        string `json:"password" validate:"required"`
 	ConfirmPassword string `json:"confirmPassword" validate:"eqfield=Password"`
-}
-type RegisterResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
 }
 
 func (ct *authController) Register(c *fiber.Ctx) error {
@@ -129,6 +115,7 @@ func (ct *authController) Register(c *fiber.Ctx) error {
 	if err != nil {
 		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
+	fmt.Println(req)
 
 	// Validate request
 	err = ct.validate.Struct(req)
@@ -150,17 +137,43 @@ func (ct *authController) Register(c *fiber.Ctx) error {
 		return err
 	}
 
+	return ct.afterAuthenticate(c, user.UUID)
+}
+
+func Logout(c *fiber.Ctx) error {
+	c.ClearCookie("accessToken")
+	c.ClearCookie("refreshToken")
+	return c.Redirect("/auth/login")
+}
+
+func (ct *authController) afterAuthenticate(c *fiber.Ctx, userUUID string) error {
 	// Generate JWT access token
-	accessToken, err := GenerateAccessToken(ct.jwtProvider, user.UUID)
+	accessToken, err := GenerateAccessToken(ct.jwtProvider, userUUID)
 	if err != nil {
 		return err
 	}
 
 	// Generate JWT refresh token
-	refreshToken, err := GenerateRefreshToken(ct.jwtProvider, user.UUID)
+	refreshToken, err := GenerateRefreshToken(ct.jwtProvider, userUUID)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(RegisterResponse{AccessToken: accessToken, RefreshToken: refreshToken})
+	c.Cookie(&fiber.Cookie{
+		Name:     "accessToken",
+		Value:    accessToken,
+		Domain:   c.Hostname(),
+		Secure:   env.Get("ENV") == "production",
+		HTTPOnly: true,
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refreshToken",
+		Value:    refreshToken,
+		Domain:   c.Hostname(),
+		Secure:   env.Get("ENV") == "production",
+		HTTPOnly: true,
+	})
+
+	return c.Redirect("/tasks")
 }

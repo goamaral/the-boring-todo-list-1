@@ -13,5 +13,5 @@ func LoadEnv() {
 	env.SetEnvIfNotDefined("DB_NAME", "the_boring_todo_list_1")
 	env.SetEnvIfNotDefined("DB_USER", "boring")
 	env.SetEnvIfNotDefined("DB_PASS", "todo")
-	godotenv.Overload(fs.RelativePath("../../secrets/.env.test"))
+	godotenv.Overload(fs.ResolveRelativePath("../../secrets/.env.test"))
 }

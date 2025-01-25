@@ -3,8 +3,6 @@ package server
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,17 +11,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type test[RES any] struct {
-	tt      *testing.T
-	app     *fiber.App
-	request *http.Request
+type test struct {
+	tt             *testing.T
+	app            *fiber.App
+	request        *http.Request
+	followRedirect bool
 }
 
-func NewTest[RES any](t *testing.T, s Server, method string, route string, reqBody any) test[RES] {
+func NewTest(t *testing.T, s Server, method string, route string, reqBody any) test {
 	reqBodyBytes, err := json.Marshal(reqBody)
 	require.NoError(t, err, "failed to marshal request body")
 
-	tst := test[RES]{
+	tst := test{
 		tt:      t,
 		app:     s.fiberApp,
 		request: httptest.NewRequest(method, route, bytes.NewReader(reqBodyBytes)),
@@ -32,50 +31,33 @@ func NewTest[RES any](t *testing.T, s Server, method string, route string, reqBo
 	return tst.WithContentType("application/json")
 }
 
-func (t test[RES]) WithHeader(key string, value string) test[RES] {
+func (t test) WithHeader(key string, value string) test {
 	t.request.Header.Set(key, value)
 	return t
 }
 
-func (t test[RES]) WithContentType(value string) test[RES] {
+func (t test) WithContentType(value string) test {
 	return t.WithHeader("Content-Type", value)
 }
 
-func (t test[RES]) WithAuthorizationHeader(value string) test[RES] {
-	return t.WithHeader("Authorization", fmt.Sprintf("Bearer %s", value))
-}
-
-func (t test[RES]) Send() *testResult[RES] {
-	res, err := t.app.Test(t.request, -1)
-	require.NoError(t.tt, err, "failed to send request")
-
-	return &testResult[RES]{tt: t.tt, res: res}
-}
-
-type testResult[RES any] struct {
-	tt                *testing.T
-	res               *http.Response
-	statusCodeChecked bool
-}
-
-func (t *testResult[RES]) ExpectsStatusCode(statusCode int) *testResult[RES] {
-	require.Equal(t.tt, statusCode, t.res.StatusCode)
-	t.statusCodeChecked = true
+func (t test) WithCookie(key string, value string) test {
+	t.request.AddCookie(&http.Cookie{Name: key, Value: value})
 	return t
 }
 
-func (t testResult[RES]) Body() []byte {
-	if !t.statusCodeChecked {
-		t.ExpectsStatusCode(fiber.StatusOK)
-	}
-
-	bodyBytes, err := io.ReadAll(t.res.Body)
-	require.NoError(t.tt, err, "failed to read response body")
-	return bodyBytes
+func (t test) FollowRedirect() test {
+	t.followRedirect = true
+	return t
 }
 
-func (t testResult[RES]) UnmarshalBody() RES {
-	var dst RES
-	require.NoError(t.tt, json.Unmarshal(t.Body(), &dst), "failed to unmarshal body")
-	return dst
+func (t test) Send() *http.Response {
+	res, err := t.app.Test(t.request, -1)
+	require.NoError(t.tt, err, "failed to send request")
+
+	if t.followRedirect && res.StatusCode >= http.StatusMultipleChoices && res.StatusCode < http.StatusBadRequest {
+		res, err = t.app.Test(res.Request.WithContext(res.Request.Context()), -1)
+		require.NoError(t.tt, err, "failed to follow redirect")
+	}
+
+	return res
 }

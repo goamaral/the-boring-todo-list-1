@@ -19,10 +19,7 @@ func TestMain(m *testing.M) {
 func TestServer_HealthCheck(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		s := server.NewServer(jwt_provider.NewTestProvider(t), nil)
-		assert.Equal(t, "OK",
-			string(server.NewTest[string](t, s, fiber.MethodGet, "/health", nil).
-				Send().
-				Body()),
-		)
+		res := server.NewTest(t, s, fiber.MethodGet, "/health", nil).Send()
+		assert.Equal(t, fiber.StatusNoContent, res.StatusCode)
 	})
 }

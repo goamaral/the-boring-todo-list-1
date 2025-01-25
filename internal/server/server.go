@@ -7,8 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/template/handlebars/v2"
 
 	"example.com/the-boring-to-do-list-1/pkg/env"
+	"example.com/the-boring-to-do-list-1/pkg/fs"
 	"example.com/the-boring-to-do-list-1/pkg/gorm_provider"
 	"example.com/the-boring-to-do-list-1/pkg/jwt_provider"
 )
@@ -20,12 +22,20 @@ type Server struct {
 }
 
 func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) Server {
+	viewEngine := handlebars.New(fs.ResolveRelativePath("../views"), ".hbs")
+	viewEngine.LayoutName = "yield"
+	if env.GetOrDefault("ENV", "production") != "production" {
+		viewEngine.Reload(true)
+	}
+
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// TODO: Use logger
 			fmt.Printf("Error: %s", err.Error())
 			return c.SendStatus(fiber.StatusInternalServerError)
 		},
+		Views:       viewEngine,
+		ViewsLayout: "layouts/public",
 	})
 	fiberApp.Use(logger.New(logger.Config{Format: "[${time} ${latency}] ${status} ${method} ${path}\n"}))
 	if env.GetOrDefault("ENV", "production") != "test" {
@@ -33,7 +43,7 @@ func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.Abs
 	}
 	fiberApp.Static("/static", "./public")
 	fiberApp.Get("/health", func(c *fiber.Ctx) error {
-		return c.SendString("OK")
+		return c.SendStatus(fiber.StatusNoContent)
 	})
 
 	return Server{

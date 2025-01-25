@@ -20,11 +20,11 @@ func NewTestDB(t *testing.T, ctx context.Context) gorm_provider.DSN {
 	dsn := initializer.DefaultDSN()
 	container, err := testcontainers_postgres.RunContainer(
 		ctx,
-		testcontainers.WithImage("postgres:16"),
+		testcontainers.WithImage("docker.io/postgres:17"),
 		testcontainers_postgres.WithDatabase(dsn.DBName),
 		testcontainers_postgres.WithUsername(dsn.User),
 		testcontainers_postgres.WithPassword(dsn.Password),
-		testcontainers_postgres.WithInitScripts(fs.RelativePath("../../db/1_schema.sql"), fs.RelativePath("../../db/2_seed.sql")),
+		testcontainers_postgres.WithInitScripts(fs.ResolveRelativePath("../../db/1_schema.sql"), fs.ResolveRelativePath("../../db/2_seed.sql")),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).

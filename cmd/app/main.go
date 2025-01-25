@@ -17,11 +17,11 @@ func main() {
 	}
 
 	// JWT
-	privKeyFile, err := os.Open(fs.RelativePath("../../secrets/ecdsa"))
+	privKeyFile, err := os.Open(fs.ResolveRelativePath("../../secrets/ecdsa"))
 	if err != nil {
 		panic(err)
 	}
-	pubKeyFile, err := os.Open(fs.RelativePath("../../secrets/ecdsa.pub"))
+	pubKeyFile, err := os.Open(fs.ResolveRelativePath("../../secrets/ecdsa.pub"))
 	if err != nil {
 		panic(err)
 	}
