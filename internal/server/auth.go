@@ -1,8 +1,6 @@
 package server
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
 	"example.com/the-boring-to-do-list-1/internal/entity"
@@ -13,11 +11,12 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 )
 
-var ErrInvalidCredentials = errors.New("invalid credentials")
-var ErrUserAlreadyExists = errors.New("user already exists")
+var ErrInvalidCredentials = fiber.NewError(fiber.StatusBadRequest, "invalid credentials")
+var ErrUserAlreadyExists = fiber.NewError(fiber.StatusUnprocessableEntity, "user already exists")
 
 type authController struct {
 	controller
@@ -33,25 +32,31 @@ func newAuthController(baseRouter fiber.Router, jwtProvider jwt_provider.Provide
 	}
 
 	router := baseRouter.Group("/auth")
+	router.Get("/login", ctrl.NewLogin)
 	router.Post("/login", ctrl.Login)
 	router.Get("/register", ctrl.NewRegister)
 	router.Post("/register", ctrl.Register)
+	router.Get("/logout", ctrl.Logout)
 
 	return ctrl
 }
 
-func GenerateAccessToken(jwtProvider jwt_provider.Provider, userUUID string) (string, error) {
+func GenerateAccessToken(jwtProvider jwt_provider.Provider, userUUID uuid.UUID) (string, error) {
 	return jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   userUUID,
+		Subject:   userUUID.String(),
 		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(15 * time.Minute)},
 	})
 }
 
-func GenerateRefreshToken(jwtProvider jwt_provider.Provider, userUUID string) (string, error) {
+func GenerateRefreshToken(jwtProvider jwt_provider.Provider, userUUID uuid.UUID) (string, error) {
 	return jwtProvider.GenerateSignedToken(jwt.RegisteredClaims{
-		Subject:   userUUID,
+		Subject:   userUUID.String(),
 		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(24 * time.Hour)},
 	})
+}
+
+func (ct *authController) NewLogin(c *fiber.Ctx) error {
+	return c.Render("auth/login", nil)
 }
 
 type LoginRequest struct {
@@ -64,7 +69,7 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 	req := LoginRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return err
 	}
 
 	// Validate request
@@ -76,14 +81,14 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 	// Get user password
 	user, found, err := ct.UserRepo.FindOne(
 		c.Context(),
-		gorm_provider.SelectOption("encrypted_password"),
+		gorm_provider.SelectOption("uuid", "encrypted_password"),
 		clause.Eq{Column: "username", Value: req.Username},
 	)
 	if err != nil {
 		return err
 	}
 	if !found {
-		return SendErrorResponse(c, fiber.StatusBadRequest, ErrInvalidCredentials)
+		return ErrInvalidCredentials
 	}
 
 	// Compare password
@@ -92,7 +97,7 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 		return err
 	}
 	if !ok {
-		return SendErrorResponse(c, fiber.StatusBadRequest, ErrInvalidCredentials)
+		return ErrInvalidCredentials
 	}
 
 	return ct.afterAuthenticate(c, user.UUID)
@@ -113,9 +118,8 @@ func (ct *authController) Register(c *fiber.Ctx) error {
 	req := RegisterRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return err
 	}
-	fmt.Println(req)
 
 	// Validate request
 	err = ct.validate.Struct(req)
@@ -132,7 +136,7 @@ func (ct *authController) Register(c *fiber.Ctx) error {
 	err = ct.UserRepo.Create(c.Context(), &user)
 	if err != nil {
 		if gorm_provider.HasErrorCode(err, gorm_provider.UniqueConstraintViolation) {
-			return SendErrorResponse(c, fiber.StatusBadRequest, ErrUserAlreadyExists)
+			return ErrUserAlreadyExists
 		}
 		return err
 	}
@@ -140,13 +144,13 @@ func (ct *authController) Register(c *fiber.Ctx) error {
 	return ct.afterAuthenticate(c, user.UUID)
 }
 
-func Logout(c *fiber.Ctx) error {
+func (ct *authController) Logout(c *fiber.Ctx) error {
 	c.ClearCookie("accessToken")
 	c.ClearCookie("refreshToken")
 	return c.Redirect("/auth/login")
 }
 
-func (ct *authController) afterAuthenticate(c *fiber.Ctx, userUUID string) error {
+func (ct *authController) afterAuthenticate(c *fiber.Ctx, userUUID uuid.UUID) error {
 	// Generate JWT access token
 	accessToken, err := GenerateAccessToken(ct.jwtProvider, userUUID)
 	if err != nil {
@@ -162,7 +166,6 @@ func (ct *authController) afterAuthenticate(c *fiber.Ctx, userUUID string) error
 	c.Cookie(&fiber.Cookie{
 		Name:     "accessToken",
 		Value:    accessToken,
-		Domain:   c.Hostname(),
 		Secure:   env.Get("ENV") == "production",
 		HTTPOnly: true,
 	})
@@ -170,7 +173,6 @@ func (ct *authController) afterAuthenticate(c *fiber.Ctx, userUUID string) error
 	c.Cookie(&fiber.Cookie{
 		Name:     "refreshToken",
 		Value:    refreshToken,
-		Domain:   c.Hostname(),
 		Secure:   env.Get("ENV") == "production",
 		HTTPOnly: true,
 	})

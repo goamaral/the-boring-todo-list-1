@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -19,12 +18,6 @@ func newController() controller {
 }
 
 /* ERRORS */
-func SendErrorResponse(c *fiber.Ctx, status int, err error) error {
-	// TODO: Use logger
-	fmt.Printf("Error: %s", err.Error())
-	return c.Status(status).JSON(fiber.Map{"error": err.Error()})
-}
-
 func SendValidationErrorsResponse(c *fiber.Ctx, errs validator.ValidationErrors) error {
 	res := fiber.Map{}
 	var parent fiber.Map

@@ -39,7 +39,7 @@ With it I am able to try and implement new technologies in a simple format.
 
 ### Backend
 - [Fiber - Http server](https://github.com/gofiber/fiber)
-- [ULID - Unique identifiers](https://github.com/oklog/ulid)
+- [UUID v7 - Unique sortable identifiers](https:///github.com/google/uuid)
 - [Validator - Struct validation](https://github.com/go-playground/validator)
 - [GORM - ORM](https://github.com/go-gorm/gorm)
 - [Goose - Migrations](https://github.com/pressly/goose)

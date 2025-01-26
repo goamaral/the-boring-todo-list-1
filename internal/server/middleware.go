@@ -13,9 +13,8 @@ import (
 func NewJWTAuthMiddleware(jwtProvider jwt_provider.Provider) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		accessToken := c.Cookies("accessToken")
-		fmt.Println("accessToken", accessToken)
 		if accessToken == "" {
-			return Logout(c)
+			return c.Redirect("/auth/logout")
 		}
 
 		claims, err := jwtProvider.GetClaims(accessToken)
@@ -23,14 +22,14 @@ func NewJWTAuthMiddleware(jwtProvider jwt_provider.Provider) func(*fiber.Ctx) er
 			// TODO: If expired, try to use refresh token
 			// TODO: Use logger
 			fmt.Printf("Error: %s", err.Error())
-			return Logout(c)
+			return c.Redirect("/auth/logout")
 		}
 
 		userUUID, err := claims.GetSubject()
 		if err != nil {
 			// TODO: Use logger
 			fmt.Printf("Error: %s", err.Error())
-			return Logout(c)
+			return c.Redirect("/auth/logout")
 		}
 
 		c.Locals("userUUID", userUUID)

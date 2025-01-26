@@ -71,7 +71,7 @@ ALTER SEQUENCE public.goose_db_version_id_seq OWNED BY public.goose_db_version.i
 
 CREATE TABLE public.tasks (
     id integer NOT NULL,
-    uuid character(26) NOT NULL,
+    uuid uuid NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     title character varying(255) NOT NULL,
@@ -132,7 +132,7 @@ ALTER SEQUENCE public.tasks_id_seq OWNED BY public.tasks.id;
 
 CREATE TABLE public.users (
     id integer NOT NULL,
-    uuid character(26) NOT NULL,
+    uuid uuid NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     username character varying(255) NOT NULL,

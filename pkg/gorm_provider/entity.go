@@ -3,7 +3,7 @@ package gorm_provider
 import (
 	"time"
 
-	"github.com/oklog/ulid/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -22,17 +22,17 @@ func (e Entity) GetID() uint {
 }
 
 type EntityWithUUID struct {
-	ID        uint `gorm:"primary_key"`
-	UUID      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-func (e EntityWithUUID) GetID() uint {
-	return e.ID
+	Entity
+	UUID uuid.UUID
 }
 
 func (e *EntityWithUUID) BeforeCreate(tx *gorm.DB) error {
-	e.UUID = ulid.Make().String()
+	if e.UUID == uuid.Nil {
+		var err error
+		e.UUID, err = uuid.NewV7()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

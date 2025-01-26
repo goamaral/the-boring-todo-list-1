@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"gorm.io/gorm/clause"
 
@@ -53,7 +54,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	req := CreateTaskRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return err
 	}
 
 	// Validate request
@@ -65,7 +66,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return Logout(c)
+		return c.Redirect("/auth/logout")
 	}
 
 	// Create task
@@ -78,12 +79,12 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(http.StatusCreated).JSON(CreateTaskResponse{UUID: task.UUID})
+	return c.Status(http.StatusCreated).JSON(CreateTaskResponse{UUID: task.UUID.String()})
 }
 
 type ListTasksRequest struct {
-	PaginationToken string `json:"paginationToken"`
-	Done            bool   `json:"done"`
+	PaginationToken string `query:"paginationToken"`
+	Done            bool   `query:"done"`
 }
 type ListTasksResponse struct {
 	Tasks []entity.Task `json:"tasks"`
@@ -92,9 +93,9 @@ type ListTasksResponse struct {
 func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// Parse request
 	req := ListTasksRequest{}
-	err := c.BodyParser(&req)
+	err := c.QueryParser(&req)
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return errors.WithStack(err)
 	}
 
 	// Validate request
@@ -116,7 +117,7 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return Logout(c)
+		return c.Redirect("/auth/logout")
 	}
 
 	// List tasks
@@ -141,7 +142,7 @@ func (tc *taskController) GetTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return Logout(c)
+		return c.Redirect("/auth/logout")
 	}
 
 	// Get task
@@ -169,13 +170,13 @@ func (tc *taskController) PatchTask(c *fiber.Ctx) error {
 	req := PatchTaskRequest{}
 	err := c.BodyParser(&req)
 	if err != nil {
-		return SendErrorResponse(c, fiber.StatusUnprocessableEntity, err)
+		return err
 	}
 
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return Logout(c)
+		return c.Redirect("/auth/logout")
 	}
 
 	// Patch task
@@ -196,7 +197,7 @@ func (tc *taskController) DeleteTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return Logout(c)
+		return c.Redirect("/auth/logout")
 	}
 
 	// Delete task

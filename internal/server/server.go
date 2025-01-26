@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -22,7 +23,7 @@ type Server struct {
 }
 
 func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) Server {
-	viewEngine := handlebars.New(fs.ResolveRelativePath("../views"), ".hbs")
+	viewEngine := handlebars.New(fs.ResolveRelativePath("../../frontend"), ".hbs")
 	viewEngine.LayoutName = "yield"
 	if env.GetOrDefault("ENV", "production") != "production" {
 		viewEngine.Reload(true)
@@ -32,7 +33,16 @@ func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.Abs
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// TODO: Use logger
 			fmt.Printf("Error: %s", err.Error())
-			return c.SendStatus(fiber.StatusInternalServerError)
+			code := fiber.StatusInternalServerError
+			var e *fiber.Error
+			if errors.As(err, &e) {
+				code = e.Code
+			}
+			if code >= fiber.StatusInternalServerError {
+				err = fiber.ErrInternalServerError
+			}
+			return c.Status(code).JSON(fiber.Map{"error": err.Error()})
+
 		},
 		Views:       viewEngine,
 		ViewsLayout: "layouts/public",
