@@ -56,7 +56,7 @@ func GenerateRefreshToken(jwtProvider jwt_provider.Provider, userUUID uuid.UUID)
 }
 
 func (ct *authController) NewLogin(c *fiber.Ctx) error {
-	return c.Render("auth/login", nil)
+	return c.Render("auth/login", nil, "layouts/public")
 }
 
 type LoginRequest struct {
@@ -104,7 +104,7 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 }
 
 func (ct *authController) NewRegister(c *fiber.Ctx) error {
-	return c.Render("auth/register", nil)
+	return c.Render("auth/register", nil, "layouts/public")
 }
 
 type RegisterRequest struct {

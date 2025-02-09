@@ -84,10 +84,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 
 type ListTasksRequest struct {
 	PaginationToken string `query:"paginationToken"`
-	Done            bool   `query:"done"`
-}
-type ListTasksResponse struct {
-	Tasks []entity.Task `json:"tasks"`
+	Done            string `query:"done"`
 }
 
 func (tc *taskController) ListTasks(c *fiber.Ctx) error {
@@ -98,40 +95,41 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 		return errors.WithStack(err)
 	}
 
-	// Validate request
-	err = tc.validate.Struct(req)
-	if err != nil {
-		return SendValidationErrorsResponse(c, err.(validator.ValidationErrors))
-	}
-
 	// Get last task fetched
 	var lastId uint = 0
 	if req.PaginationToken != "" {
 		task, err := tc.TaskRepo.First(c.Context(), clause.Eq{Column: "uuid", Value: req.PaginationToken})
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		lastId = task.ID
 	}
 
 	// Get Auth
+	// TODO: Use join instead of getting user
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
 		return c.Redirect("/auth/logout")
 	}
 
 	// List tasks
-	tasks, err := tc.TaskRepo.Find(
-		c.Context(),
+	opts := []any{
 		clause.Eq{Column: "author_id", Value: authUser.ID},
 		clause.Gt{Column: "id", Value: lastId},
-		lo.Ternary[clause.Expression](req.Done, clause.Neq{Column: "done_at", Value: nil}, clause.Eq{Column: "done_at", Value: nil}),
-	)
+	}
+	if req.Done != "" {
+		opts = append(opts, lo.Ternary[clause.Expression](
+			req.Done == "true",
+			clause.Neq{Column: "done_at", Value: nil},
+			clause.Eq{Column: "done_at", Value: nil},
+		))
+	}
+	tasks, err := tc.TaskRepo.Find(c.Context(), opts)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(ListTasksResponse{Tasks: tasks})
+	return c.Render("tasks/index", fiber.Map{"tasks": tasks}, "layouts/private")
 }
 
 type GetTaskResponse struct {

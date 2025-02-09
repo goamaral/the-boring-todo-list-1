@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/template/handlebars/v2"
+	html "github.com/gofiber/template/html/v2"
 
 	"example.com/the-boring-to-do-list-1/pkg/env"
 	"example.com/the-boring-to-do-list-1/pkg/fs"
@@ -23,8 +23,8 @@ type Server struct {
 }
 
 func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) Server {
-	viewEngine := handlebars.New(fs.ResolveRelativePath("../../frontend"), ".hbs")
-	viewEngine.LayoutName = "yield"
+	viewEngine := html.New(fs.ResolveRelativePath("../../frontend"), ".html")
+	// viewEngine.Layout("yield")
 	if env.GetOrDefault("ENV", "production") != "production" {
 		viewEngine.Reload(true)
 	}

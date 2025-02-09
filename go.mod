@@ -6,7 +6,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/go-playground/validator/v10 v10.15.4
 	github.com/gofiber/fiber/v2 v2.52.2
-	github.com/gofiber/template/handlebars/v2 v2.1.9
+	github.com/gofiber/template/html/v2 v2.1.3
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.5.0
 	github.com/jackc/pgx/v5 v5.4.3
@@ -14,7 +14,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.27.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.27.0
 	golang.org/x/crypto v0.14.0
@@ -52,7 +52,6 @@ require (
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mailgun/raymond/v2 v2.0.48 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
