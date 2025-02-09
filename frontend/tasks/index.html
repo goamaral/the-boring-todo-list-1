@@ -1,7 +1,13 @@
 {{range .tasks}}
-  <div><strong>Title:</strong> {{.Title}}</div>
-  {{if .DoneAt}}
-    <div><strong>Done:</strong> {{.DoneAt}}</div>
-  {{end}}
-  ---
+  <div>
+    <p><strong>Title:</strong> {{.Title}}</p>
+    {{if .DoneAt}}
+      <p><strong>Done:</strong> {{.DoneAt}}</p>
+    {{end}}
+  </div>
 {{end}}
+
+{{if .paginationToken}}
+  <a href="/tasks?paginationToken={{.paginationToken}}">Next</a>
+{{end}}
+<a href="/tasks/new">New task</a>

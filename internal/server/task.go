@@ -117,6 +117,7 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	opts := []any{
 		clause.Eq{Column: "author_id", Value: authUser.ID},
 		clause.Gt{Column: "id", Value: lastId},
+		clause.Limit{Limit: lo.ToPtr(10)},
 	}
 	if req.Done != "" {
 		opts = append(opts, lo.Ternary[clause.Expression](
@@ -130,7 +131,12 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 		return errors.WithStack(err)
 	}
 
-	return c.Render("tasks/index", fiber.Map{"tasks": tasks}, "layouts/private")
+	paginationToken := ""
+	if len(tasks) > 0 {
+		paginationToken = tasks[len(tasks)-1].UUID.String()
+	}
+
+	return c.Render("tasks/index", fiber.Map{"tasks": tasks, "paginationToken": paginationToken}, "layouts/private")
 }
 
 type GetTaskResponse struct {

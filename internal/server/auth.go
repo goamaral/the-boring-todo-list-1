@@ -75,6 +75,7 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 	// Validate request
 	err = ct.validate.Struct(req)
 	if err != nil {
+		// TODO: Send as form error
 		return SendValidationErrorsResponse(c, err.(validator.ValidationErrors))
 	}
 
@@ -88,6 +89,7 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 		return err
 	}
 	if !found {
+		// TODO: Send as form error
 		return ErrInvalidCredentials
 	}
 
@@ -97,6 +99,7 @@ func (ct *authController) Login(c *fiber.Ctx) error {
 		return err
 	}
 	if !ok {
+		// TODO: Send as form error
 		return ErrInvalidCredentials
 	}
 
