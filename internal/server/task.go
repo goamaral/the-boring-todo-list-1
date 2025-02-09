@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
@@ -84,8 +86,8 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 }
 
 type ListTasksRequest struct {
-	PaginationToken string `query:"paginationToken"`
-	Done            string `query:"done"`
+	Page uint   `query:"page"`
+	Done string `query:"done"`
 }
 
 func (tc *taskController) ListTasks(c *fiber.Ctx) error {
@@ -96,16 +98,6 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 		return errors.WithStack(err)
 	}
 
-	// Get last task fetched
-	var lastId uint = 0
-	if req.PaginationToken != "" {
-		task, err := tc.TaskRepo.First(c.Context(), clause.Eq{Column: "uuid", Value: req.PaginationToken})
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		lastId = task.ID
-	}
-
 	// Get Auth
 	// TODO: Use join instead of getting user
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
@@ -114,10 +106,10 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	}
 
 	// List tasks
+	pageSize := 2
 	opts := []any{
 		clause.Eq{Column: "author_id", Value: authUser.ID},
-		clause.Gt{Column: "id", Value: lastId},
-		clause.Limit{Limit: lo.ToPtr(10)},
+		clause.Limit{Offset: int(req.Page) * pageSize, Limit: &pageSize},
 	}
 	if req.Done != "" {
 		opts = append(opts, lo.Ternary[clause.Expression](
@@ -131,12 +123,15 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 		return errors.WithStack(err)
 	}
 
-	paginationToken := ""
-	if len(tasks) > 0 {
-		paginationToken = tasks[len(tasks)-1].UUID.String()
-	}
-
-	return c.Render("tasks/index", fiber.Map{"tasks": tasks, "paginationToken": paginationToken}, "layouts/private")
+	return c.Render(
+		"tasks/index",
+		fiber.Map{
+			"tasks":    tasks,
+			"prevPage": lo.Ternary(req.Page > 0, fmt.Sprint(req.Page-1), ""),
+			"nextPage": lo.Ternary(len(tasks) == pageSize, fmt.Sprint(req.Page+1), ""),
+		},
+		"layouts/private",
+	)
 }
 
 type GetTaskResponse struct {

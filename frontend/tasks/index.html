@@ -1,13 +1,20 @@
 {{range .tasks}}
+<a href="/tasks/{{.UUID}}">
   <div>
     <p><strong>Title:</strong> {{.Title}}</p>
     {{if .DoneAt}}
-      <p><strong>Done:</strong> {{.DoneAt}}</p>
+    <p><strong>Done:</strong> {{.DoneAt}}</p>
     {{end}}
   </div>
+</a>
+<hr/>
 {{end}}
 
-{{if .paginationToken}}
-  <a href="/tasks?paginationToken={{.paginationToken}}">Next</a>
+{{if .prevPage}}
+<a href="/tasks?page={{.prevPage}}">Prev</a>
 {{end}}
+{{if .nextPage}}
+<a href="/tasks?page={{.nextPage}}">Next</a>
+{{end}}
+
 <a href="/tasks/new">New task</a>
