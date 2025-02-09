@@ -124,6 +124,7 @@ func (ct *authController) Register(c *fiber.Ctx) error {
 	// Validate request
 	err = ct.validate.Struct(req)
 	if err != nil {
+		// TODO: Return view with validation errors
 		return SendValidationErrorsResponse(c, err.(validator.ValidationErrors))
 	}
 

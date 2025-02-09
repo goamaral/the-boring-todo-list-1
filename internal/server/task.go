@@ -1,8 +1,6 @@
 package server
 
 import (
-	"net/http"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
@@ -30,6 +28,7 @@ func newTaskController(baseRouter fiber.Router, jwtProvider jwt_provider.Provide
 
 	router := baseRouter.Group("/tasks")
 	router.Use(NewJWTAuthMiddleware(jwtProvider))
+	router.Get("/new", ctrl.NewTask)
 	router.Post("/", ctrl.CreateTask)
 	router.Get("/", ctrl.ListTasks)
 	router.Get("/:uuid", ctrl.GetTask)
@@ -39,11 +38,12 @@ func newTaskController(baseRouter fiber.Router, jwtProvider jwt_provider.Provide
 	return ctrl
 }
 
-type NewTask struct {
-	Title string `json:"title" validate:"required"`
+func (tc *taskController) NewTask(c *fiber.Ctx) error {
+	return c.Render("tasks/new", fiber.Map{}, "layouts/private")
 }
+
 type CreateTaskRequest struct {
-	Task NewTask `json:"task" validate:"required"`
+	Title string `json:"title" validate:"required"`
 }
 type CreateTaskResponse struct {
 	UUID string `json:"uuid"`
@@ -60,6 +60,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 	// Validate request
 	err = tc.validate.Struct(req)
 	if err != nil {
+		// TODO: Return view with validation errors
 		return SendValidationErrorsResponse(c, err.(validator.ValidationErrors))
 	}
 
@@ -71,7 +72,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 
 	// Create task
 	task := entity.Task{
-		Title:    req.Task.Title,
+		Title:    req.Title,
 		AuthorID: authUser.ID,
 	}
 	err = tc.TaskRepo.Create(c.Context(), &task)
@@ -79,7 +80,7 @@ func (tc *taskController) CreateTask(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(http.StatusCreated).JSON(CreateTaskResponse{UUID: task.UUID.String()})
+	return c.Redirect("/tasks/" + task.UUID.String())
 }
 
 type ListTasksRequest struct {

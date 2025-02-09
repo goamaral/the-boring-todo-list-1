@@ -55,7 +55,9 @@ func (t test) Send() *http.Response {
 	require.NoError(t.tt, err, "failed to send request")
 
 	if t.followRedirect && res.StatusCode >= http.StatusMultipleChoices && res.StatusCode < http.StatusBadRequest {
-		res, err = t.app.Test(res.Request.WithContext(res.Request.Context()), -1)
+		req := httptest.NewRequest(fiber.MethodGet, res.Header.Get("Location"), nil)
+		req.Header.Set("Cookie", t.request.Header.Get("Cookie"))
+		res, err = t.app.Test(req, -1)
 		require.NoError(t.tt, err, "failed to follow redirect")
 	}
 

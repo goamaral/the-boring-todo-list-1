@@ -35,22 +35,24 @@ func TestTask_CreateTask(t *testing.T) {
 
 		res := server.NewTest(
 			t, s, fiber.MethodPost, "/tasks",
-			server.CreateTaskRequest{Task: server.NewTask{Title: title}},
+			server.CreateTaskRequest{Title: title},
 		).
 			WithCookie("accessToken", accessToken).
 			Send()
-		assert.Equal(t, fiber.StatusCreated, res.StatusCode)
+		require.Equal(t, fiber.StatusFound, res.StatusCode)
 
-		// TODO: Check response
-		// task, err := repository.NewTaskRepository(gormProvider).First(context.Background(), clause.Eq{Column: "uuid", Value: res.UUID})
-		// require.NoError(t, err)
-		// assert.Equal(t, task.AuthorID, user.ID)
+		task, err := repository.NewTaskRepository(gormProvider).First(
+			context.Background(),
+			gorm_provider.OrderOption("created_at DESC"),
+		)
+		require.NoError(t, err)
+		assert.Equal(t, "/tasks/"+task.UUID.String(), res.Header.Get("Location"))
 	})
 
 	t.Run("BadRequest", func(t *testing.T) {
 		res := server.NewTest(
 			t, s, fiber.MethodPost, "/tasks",
-			server.CreateTaskRequest{Task: server.NewTask{}},
+			server.CreateTaskRequest{},
 		).
 			WithCookie("accessToken", accessToken).
 			Send()
