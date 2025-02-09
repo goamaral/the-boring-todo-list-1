@@ -5,6 +5,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	html "github.com/gofiber/template/html/v2"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"gorm.io/gorm/clause"
@@ -17,13 +19,15 @@ import (
 
 type taskController struct {
 	controller
-	TaskRepo repository.TaskRepository
-	UserRepo repository.UserRepository
+	viewEngine *html.Engine
+	TaskRepo   repository.TaskRepository
+	UserRepo   repository.UserRepository
 }
 
-func newTaskController(baseRouter fiber.Router, jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) *taskController {
+func newTaskController(baseRouter fiber.Router, jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider, viewEngine *html.Engine) *taskController {
 	ctrl := &taskController{
 		controller: newController(),
+		viewEngine: viewEngine,
 		TaskRepo:   repository.NewTaskRepository(gormProvider),
 		UserRepo:   repository.NewUserRepository(gormProvider),
 	}
@@ -40,8 +44,21 @@ func newTaskController(baseRouter fiber.Router, jwtProvider jwt_provider.Provide
 	return ctrl
 }
 
+type TaskForm struct {
+	UUID  uuid.UUID
+	Title string
+}
+
+func (f TaskForm) Method() string {
+	return lo.Ternary(f.UUID == uuid.Nil, fiber.MethodPost, fiber.MethodPatch)
+}
+
+func (f TaskForm) Action() string {
+	return lo.Ternary(f.UUID == uuid.Nil, "/tasks", "/tasks/"+f.UUID.String())
+}
+
 func (tc *taskController) NewTask(c *fiber.Ctx) error {
-	return c.Render("tasks/new", fiber.Map{}, "layouts/private")
+	return c.Render("tasks/new", fiber.Map{"form": TaskForm{}}, "layouts/private")
 }
 
 type CreateTaskRequest struct {

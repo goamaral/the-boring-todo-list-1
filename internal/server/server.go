@@ -24,7 +24,6 @@ type Server struct {
 
 func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.AbstractProvider) Server {
 	viewEngine := html.New(fs.ResolveRelativePath("../../frontend"), ".html")
-	// viewEngine.Layout("yield")
 	if env.GetOrDefault("ENV", "production") != "production" {
 		viewEngine.Reload(true)
 	}
@@ -59,7 +58,7 @@ func NewServer(jwtProvider jwt_provider.Provider, gormProvider gorm_provider.Abs
 	return Server{
 		fiberApp:       fiberApp,
 		AuthController: newAuthController(fiberApp, jwtProvider, gormProvider),
-		TaskController: newTaskController(fiberApp, jwtProvider, gormProvider),
+		TaskController: newTaskController(fiberApp, jwtProvider, gormProvider, viewEngine),
 	}
 }
 
