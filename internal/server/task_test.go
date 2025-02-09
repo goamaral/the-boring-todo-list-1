@@ -31,11 +31,9 @@ func TestTask_CreateTask(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Created", func(t *testing.T) {
-		title := "title"
-
 		res := server.NewTest(
 			t, s, fiber.MethodPost, "/tasks",
-			server.CreateTaskRequest{Title: title},
+			server.CreateTaskRequest{Title: "title"},
 		).
 			WithCookie("accessToken", accessToken).
 			Send()

@@ -4,38 +4,20 @@ With it I am able to try and implement new technologies in a simple format.
 
 ## Features
 - [X] Healthcheck
-- [ ] Create task
-  - [X] Backend
-  - [ ] Frontend
-- [ ] List tasks
-  - [X] Backend
-  - [ ] Frontend
+- [X] Create task
+- [X] List tasks
 - [ ] Get task
-  - [X] Backend
-  - [ ] Frontend
 - [ ] Update task title
-  - [X] Backend
-  - [ ] Frontend
 - [ ] Delete task
-  - [X] Backend
-  - [ ] Frontend
 - [ ] Toggle done state
-  - [X] Backend
-  - [ ] Frontend
 - [ ] Add search state filter
-  - [X] Backend
-  - [ ] Frontend
 - [ ] Add authentication
-- [ ] Add author to task
-- [ ] Add search author filter
-- [ ] Stop internal errors from propagating to the responses
 - [ ] Implement end to end tests
 
 ## Technologies
 ### Development tools
 - [Air - Code reloader](https://github.com/cosmtrek/air)
 - [Godotenv - Env loader](https://github.com/joho/godotenv)
-- [Mockery - Mock generator](https://github.com/vektra/mockery)
 
 ### Backend
 - [Fiber - Http server](https://github.com/gofiber/fiber)
@@ -46,7 +28,4 @@ With it I am able to try and implement new technologies in a simple format.
 - [jwt-go - JWT](https://github.com/golang-jwt/jwt)
 
 ### Frontend
-Not choosen yet
-
-### DevOps
-Not defined yet
+- [Go HTML Templates](https://docs.gofiber.io/template/html_v2.x.x/html)
