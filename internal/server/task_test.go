@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/oklog/ulid/v2"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm/clause"
@@ -103,7 +103,7 @@ func TestTask_GetTask(t *testing.T) {
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
-		res := server.NewTest(t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", ulid.Make().String()), nil).
+		res := server.NewTest(t, s, fiber.MethodGet, fmt.Sprintf("/tasks/%s", uuid.NewString()), nil).
 			WithCookie("accessToken", accessToken).
 			Send()
 		assert.Equal(t, fiber.StatusNotFound, res.StatusCode)

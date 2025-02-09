@@ -1,7 +1,9 @@
 package test
 
-import "github.com/oklog/ulid/v2"
+import (
+	"github.com/google/uuid"
+)
 
 func RandomString() string {
-	return ulid.Make().String()
+	return uuid.NewString() // TODO: Use std rand
 }

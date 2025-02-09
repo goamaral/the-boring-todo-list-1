@@ -134,15 +134,11 @@ func (tc *taskController) ListTasks(c *fiber.Ctx) error {
 	)
 }
 
-type GetTaskResponse struct {
-	Task entity.Task `json:"task"`
-}
-
 func (tc *taskController) GetTask(c *fiber.Ctx) error {
 	// Get Auth
 	authUser, err := GetAuthUser(c, tc.UserRepo, gorm_provider.SelectOption("id"))
 	if err != nil {
-		return c.Redirect("/auth/logout")
+		return Logout(c)
 	}
 
 	// Get task
@@ -158,7 +154,11 @@ func (tc *taskController) GetTask(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(GetTaskResponse{Task: task})
+	return c.Render(
+		"tasks/show",
+		fiber.Map{"task": task},
+		"layouts/private",
+	)
 }
 
 type PatchTaskRequest struct {

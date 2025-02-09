@@ -41,3 +41,7 @@ func NewJWTAuthMiddleware(jwtProvider jwt_provider.Provider) func(*fiber.Ctx) er
 func GetAuthUser(c *fiber.Ctx, userRepo repository.UserRepository, opts ...any) (entity.User, error) {
 	return userRepo.First(c.Context(), clause.Eq{Column: "uuid", Value: c.Locals("userUUID")}, opts)
 }
+
+func Logout(c *fiber.Ctx) error {
+	return c.Redirect("/auth/logout")
+}
